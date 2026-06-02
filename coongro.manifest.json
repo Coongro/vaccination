@@ -1,0 +1,205 @@
+{
+  "id": "vaccination",
+  "version": "1.0.0",
+  "apiVersion": "2.0",
+  "entry": "dist/entry.js",
+  "assets": {
+    "styles": [
+      "./dist/assets/tailwind.css",
+      "./dist/assets/fontawesome/css/all.min.css"
+    ]
+  },
+  "contributes": {
+    "menus": [
+      {
+        "path": "Vacunación",
+        "order": 3,
+        "icon": "assets/icons/syringe.svg",
+        "color": "#10B981"
+      },
+      {
+        "path": "Vacunación/Catálogo",
+        "order": 1,
+        "viewId": "vaccination.catalogo.open"
+      },
+      {
+        "path": "Vacunación/Lotes",
+        "order": 2,
+        "viewId": "vaccination.lotes.open"
+      },
+      {
+        "path": "Vacunación/Aplicadas",
+        "order": 3,
+        "viewId": "vaccination.aplicadas.open"
+      },
+      {
+        "path": "Vacunación/Próximas dosis",
+        "order": 4,
+        "viewId": "vaccination.proximas-dosis.open"
+      }
+    ],
+    "views": [
+      {
+        "id": "vaccination.catalogo.open",
+        "title": "Catálogo",
+        "component": "./dist/views/catalogo/index.js",
+        "export": "CatalogoView"
+      },
+      {
+        "id": "vaccination.lotes.open",
+        "title": "Lotes",
+        "component": "./dist/views/lotes/index.js",
+        "export": "LotesView"
+      },
+      {
+        "id": "vaccination.aplicadas.open",
+        "title": "Aplicadas",
+        "component": "./dist/views/aplicadas/index.js",
+        "export": "AplicadasView"
+      },
+      {
+        "id": "vaccination.proximas-dosis.open",
+        "title": "Próximas dosis",
+        "component": "./dist/views/proximas-dosis/index.js",
+        "export": "ProximasDosisView"
+      }
+    ],
+    "repositories": [
+      {
+        "module": "./dist/repositories/laboratory.repository.js",
+        "export": "LaboratoryRepository",
+        "prefix": "vaccination.laboratories"
+      },
+      {
+        "module": "./dist/repositories/vaccine-detail.repository.js",
+        "export": "VaccineDetailRepository",
+        "prefix": "vaccination.catalog"
+      },
+      {
+        "module": "./dist/repositories/applied-vaccination.repository.js",
+        "export": "AppliedVaccinationRepository",
+        "prefix": "vaccination.applied"
+      }
+    ],
+    "viewContributions": [
+      {
+        "targetViewId": "patients.detail.open",
+        "slot": "sections",
+        "component": "./dist/contributions/vaccination-section/index.js",
+        "export": "VaccinationSection",
+        "order": 35,
+        "label": "Vacunación"
+      },
+      {
+        "targetViewId": "consultations.form.open",
+        "slot": "sections",
+        "component": "./dist/contributions/consultation-vaccines-section/index.js",
+        "export": "ConsultationVaccinesSection",
+        "order": 45,
+        "label": "Vacunas"
+      }
+    ],
+    "settings": {
+      "groups": [
+        {
+          "id": "vaccination",
+          "label": "Vacunación",
+          "order": 50
+        }
+      ],
+      "pages": [
+        {
+          "id": "vaccination.general",
+          "group": "vaccination",
+          "label": "General",
+          "icon": "assets/icons/general.svg",
+          "order": 10
+        }
+      ],
+      "sections": [
+        {
+          "id": "vaccination.general.main",
+          "page": "vaccination.general",
+          "label": "General",
+          "order": 10,
+          "items": [
+            {
+              "key": "vaccination.nextDoseAppointment",
+              "type": "enum",
+              "label": "Turno para próxima dosis",
+              "description": "Al registrar una vacunación, controla si se ofrece agendar el turno de la próxima dosis automáticamente.",
+              "default": "ask",
+              "options": [
+                "off",
+                "ask",
+                "auto"
+              ],
+              "tags": [
+                "vaccination",
+                "nextdoseappointment",
+                "turno",
+                "para",
+                "próxima",
+                "dosis"
+              ]
+            },
+            {
+              "key": "vaccination.nextDoseDefaultTime",
+              "type": "enum",
+              "label": "Hora del turno de próxima dosis",
+              "description": "Hora preferida para el turno de la próxima dosis. Pre-carga el inicio al agendar; el veterinario la puede cambiar.",
+              "default": "09:00",
+              "options": [
+                "08:00",
+                "08:30",
+                "09:00",
+                "09:30",
+                "10:00",
+                "10:30",
+                "11:00",
+                "11:30",
+                "12:00",
+                "12:30",
+                "13:00",
+                "13:30",
+                "14:00",
+                "14:30",
+                "15:00",
+                "15:30",
+                "16:00",
+                "16:30",
+                "17:00",
+                "17:30",
+                "18:00"
+              ],
+              "tags": [
+                "vaccination",
+                "nextdosedefaulttime",
+                "hora",
+                "turno",
+                "próxima",
+                "dosis"
+              ]
+            },
+            {
+              "key": "vaccination.nextDoseDefaultDuration",
+              "type": "enum",
+              "label": "Duración del turno de próxima dosis",
+              "description": "Duración por defecto del turno (la hora de fin se calcula como inicio + esta duración). El veterinario puede ajustar la hora de fin al agendar.",
+              "default": "15",
+              "options": ["10", "15", "20", "30", "45", "60"],
+              "tags": [
+                "vaccination",
+                "nextdosedefaultduration",
+                "duración",
+                "turno",
+                "minutos",
+                "fin"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

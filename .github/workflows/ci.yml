@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, staging, main]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  branch-policy:
+    name: Branch Policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Validate PR target branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const base = context.payload.pull_request.base.ref;
+            const head = context.payload.pull_request.head.ref;
+
+            const rules = {
+              'staging': ['develop'],
+              'main': ['staging', 'release/'],
+            };
+
+            if (base === 'develop') {
+              console.log('PR ' + head + ' → develop: permitido');
+              return;
+            }
+
+            const allowed = rules[base];
+            if (allowed) {
+              const isAllowed = allowed.some(prefix =>
+                head === prefix || head.startsWith(prefix)
+              );
+              if (isAllowed) {
+                console.log('PR ' + head + ' → ' + base + ': permitido');
+                return;
+              }
+
+              const msg = base === 'staging'
+                ? 'Los PRs a staging solo se aceptan desde develop.'
+                : 'Los PRs a main solo se aceptan desde staging o release/*.';
+
+              core.setFailed(
+                'PR rechazado: ' + head + ' → ' + base + '\n' +
+                msg + '\n' +
+                'Flujo correcto: feature/* → develop → staging → main'
+              );
+              return;
+            }
+
+            core.setFailed(
+              'PR rechazado: ' + head + ' → ' + base + '\n' +
+              'Los PRs deben apuntar a develop, staging o main.\n' +
+              'Flujo correcto: feature/* → develop → staging → main'
+            );
+
+  quality:
+    name: Quality & Build
+    needs: branch-policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure @coongro registry
+        run: |
+          echo "@coongro:registry=${{ secrets.STAGING_VERDACCIO_URL }}" > .npmrc
+          echo "//${{ secrets.STAGING_VERDACCIO_URL_HOST }}/:_authToken=${{ secrets.STAGING_VERDACCIO_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: |
+          rm -f package-lock.json
+          npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

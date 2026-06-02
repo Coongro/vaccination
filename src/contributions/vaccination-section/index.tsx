@@ -3,6 +3,7 @@ import { formatSpecies } from '@coongro/patients';
 
 const UI = getHostUI();
 import { useVaccinationData, applyVaccine } from '../../data/useVaccinationData.js';
+import { chargeAppliedVaccine } from '../../data/billing.js';
 import { useVaccinationSettings } from '../../data/useVaccinationSettings.js';
 import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
 import { ApplyVaccineDialog } from '../../components/ApplyVaccineDialog.js';
@@ -68,6 +69,19 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
     async (data: ApplyFormData) => {
       const appliedId = await applyVaccine(data);
       toast('Aplicación registrada', 'La dosis quedó asentada y descontada del lote.', 'success');
+
+      // Cobro: desde la ficha es venta de mostrador (sin consulta). Precio = catálogo.
+      const prod = products.find((p) => p.productId === data.productId);
+      void chargeAppliedVaccine({
+        appliedId,
+        productId: data.productId,
+        productName: prod?.name ?? 'Vacuna',
+        salePrice: prod?.salePrice ?? null,
+        contactId: ownerContactId,
+        petId: petId ?? '',
+        consultationId: null,
+      });
+
       await reload();
 
       // Turno de la próxima dosis según el setting (off/ask/auto).

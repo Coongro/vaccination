@@ -17,6 +17,8 @@ export interface ApplyProductOption {
   labName: string;
   /** Intervalo del esquema (días) para autocalcular la próxima dosis. */
   scheduleIntervalDays: number | null;
+  /** Precio de venta del catálogo (para la línea de cobro al aplicar). */
+  salePrice: string | null;
 }
 
 /** Lote disponible de un producto (variante con stock). */

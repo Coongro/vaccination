@@ -9,6 +9,7 @@ import {
   suggestFreeSlot,
   addMinutesToTime,
 } from '../../data/useVaccinationData.js';
+import { chargeAppliedVaccine } from '../../data/billing.js';
 import { useVaccinationSettings } from '../../data/useVaccinationSettings.js';
 import { formatDate } from '../../components/lote-status.js';
 
@@ -42,6 +43,7 @@ interface PendingVaccine {
   lote: string;
   expiresAt: string;
   intervalDays: number | null;
+  salePrice: string | null;
 }
 
 /**
@@ -106,6 +108,7 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
         lote: lote.lote,
         expiresAt: lote.expiresAt,
         intervalDays: product.scheduleIntervalDays,
+        salePrice: product.salePrice,
       },
     ]);
     setProductId('');
@@ -128,22 +131,19 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
         const weightKg = row.weight_kg != null ? String(row.weight_kg) : null;
 
         void (async () => {
-          // En modo "auto" agendamos el turno de cada próxima dosis. Necesitamos el
-          // dueño (contact_id) de la mascota; lo resolvemos una sola vez. "ask" no
-          // aplica acá (no se puede preguntar en medio del guardado) → se comporta
-          // como "off": la dosis queda pendiente en Próximas dosis.
           const auto = modeRef.current === 'auto';
+          const consultationId = (row.id as string | undefined) ?? null;
+          // Dueño de la mascota — lo necesitamos para el cobro (contact de la cuenta)
+          // y para el agendado en modo auto. Lo resolvemos una sola vez.
           let owner: { ownerId: string | null; name: string } = { ownerId: null, name: '' };
-          if (auto) {
-            try {
-              const pets = await actions.execute<
-                Array<{ id: string; name: string; owner_id: string }>
-              >('patients.pets.list');
-              const pet = pets?.find((p) => p.id === patientId);
-              owner = { ownerId: pet?.owner_id ?? null, name: pet?.name ?? '' };
-            } catch {
-              /* sin pets: no agendamos, solo registramos */
-            }
+          try {
+            const pets = await actions.execute<
+              Array<{ id: string; name: string; owner_id: string }>
+            >('patients.pets.list');
+            const pet = pets?.find((p) => p.id === patientId);
+            owner = { ownerId: pet?.owner_id ?? null, name: pet?.name ?? '' };
+          } catch {
+            /* sin pets: cobramos sin contacto y no agendamos */
           }
 
           for (const v of list) {
@@ -158,6 +158,19 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
               nextDoseDate,
               notes: null,
             });
+
+            // Cobro: línea de la vacuna en la cuenta de esta consulta (mismo ticket).
+            void chargeAppliedVaccine({
+              appliedId,
+              productId: v.productId,
+              productName: v.productName,
+              salePrice: v.salePrice,
+              contactId: owner.ownerId,
+              petId: patientId,
+              consultationId,
+            });
+
+            // "ask" no aplica en batch (no se puede preguntar mid-guardado) → como "off".
             if (auto && nextDoseDate && owner.ownerId) {
               try {
                 const time = await suggestFreeSlot(nextDoseDate, timeRef.current, tzRef.current);

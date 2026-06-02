@@ -241,6 +241,7 @@ interface Contact {
 interface Product {
   id: string;
   name: string;
+  sale_price: string | null;
 }
 interface Lab {
   id: string;
@@ -326,7 +327,11 @@ export function useVaccinationData(): VaccinationData {
         contactEmailById.set(c.id, c.email ?? null);
       }
       const productNameById = new Map<string, string>();
-      for (const p of productList) productNameById.set(p.id, p.name);
+      const productPriceById = new Map<string, string | null>();
+      for (const p of productList) {
+        productNameById.set(p.id, p.name);
+        productPriceById.set(p.id, p.sale_price ?? null);
+      }
       const labNameById = new Map<string, string>();
       for (const l of labs) labNameById.set(l.id, l.name);
       // El nombre del profesional vive en contacts (staff guarda contact_id).
@@ -350,6 +355,7 @@ export function useVaccinationData(): VaccinationData {
           name,
           labName: labNameById.get(d.laboratory_id) ?? '',
           scheduleIntervalDays: d.schedule_interval_days,
+          salePrice: productPriceById.get(d.product_id) ?? null,
         });
       }
       productOptions.sort((a, b) => a.name.localeCompare(b.name));

@@ -130,9 +130,9 @@
               "description": "Al registrar una vacunación, controla si se ofrece agendar el turno de la próxima dosis automáticamente.",
               "default": "ask",
               "options": [
-                "off",
-                "ask",
-                "auto"
+                { "value": "off", "label": "No agendar" },
+                { "value": "ask", "label": "Preguntar" },
+                { "value": "auto", "label": "Agendar automáticamente" }
               ],
               "tags": [
                 "vaccination",

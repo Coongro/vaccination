@@ -1,8 +1,9 @@
 import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
-import { formatDate } from './lote-status.js';
 import type { AppliedItem, ScheduledNextDose } from '../data/useVaccinationData.js';
+
+import { formatDate } from './lote-status.js';
 
 const React = getHostReact();
 const h = React.createElement;
@@ -62,7 +63,9 @@ export function AppliedDetailDrawer(props: AppliedDetailDrawerProps) {
     ? muted(null)
     : h(
         'div',
-        { style: { display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end' } },
+        {
+          style: { display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end' },
+        },
         h('span', { style: mono }, formatDate(item.nextDoseDate)),
         nextDoseAction
       );
@@ -70,13 +73,16 @@ export function AppliedDetailDrawer(props: AppliedDetailDrawerProps) {
   const detailRows: [string, unknown][] = [
     ['Fecha', h('span', { style: mono }, formatDate(item.appliedDate))],
     ['Paciente', h('span', { style: { fontWeight: 600 } }, item.patientName)],
-    ['Tutor', muted(item.tutor)],
+    ['Dueño', muted(item.tutor)],
     ['Producto', item.productName],
     ['Laboratorio', muted(item.labName || null)],
     ['Lote', h('span', { style: mono }, item.lote)],
     ['Peso', item.weightKg ? h('span', { style: mono }, `${item.weightKg} kg`) : muted(null)],
     ['Profesional', muted(item.vetName === '—' ? null : item.vetName)],
-    ['Nro. de dosis', item.doseNumber != null ? h('span', { style: mono }, String(item.doseNumber)) : muted(null)],
+    [
+      'Nro. de dosis',
+      item.doseNumber != null ? h('span', { style: mono }, String(item.doseNumber)) : muted(null),
+    ],
     ['Próxima dosis', nextDoseValue],
   ];
 
@@ -85,7 +91,9 @@ export function AppliedDetailDrawer(props: AppliedDetailDrawerProps) {
     { open, onOpenChange: (val: boolean) => !val && onClose(), side: 'right' } as any,
     h(
       UI.SheetContent,
-      { style: { width: '480px', maxWidth: '92vw', display: 'flex', flexDirection: 'column' } } as any,
+      {
+        style: { width: '480px', maxWidth: '92vw', display: 'flex', flexDirection: 'column' },
+      } as any,
 
       // Header
       h(

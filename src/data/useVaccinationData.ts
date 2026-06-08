@@ -1,5 +1,6 @@
-import { getHostReact, actions } from '@coongro/plugin-sdk';
 import { localToUTC, addMinutes } from '@coongro/datetime';
+import { getHostReact, actions } from '@coongro/plugin-sdk';
+
 import type {
   ApplyProductOption,
   ApplyLoteOption,
@@ -97,7 +98,11 @@ const NEXT_DOSE_LAST_HOUR = 20;
  * está ocupado hasta `NEXT_DOSE_LAST_HOUR`, devuelve la preferida. Si la agenda no
  * responde, devuelve la preferida sin más.
  */
-export async function suggestFreeSlot(dateKey: string, preferred: string, tz: string): Promise<string> {
+export async function suggestFreeSlot(
+  dateKey: string,
+  preferred: string,
+  tz: string
+): Promise<string> {
   const [ph, pm] = preferred.split(':').map(Number);
   if (!Number.isFinite(ph) || !Number.isFinite(pm)) return preferred;
 
@@ -108,7 +113,7 @@ export async function suggestFreeSlot(dateKey: string, preferred: string, tz: st
     >('appointments.search', { pageSize: 500 });
     busy = (appts ?? [])
       .filter((a) => a.status !== 'cancelled' && a.event_start_at && a.event_end_at)
-      .map((a) => [Date.parse(a.event_start_at as string), Date.parse(a.event_end_at as string)]);
+      .map((a) => [Date.parse(a.event_start_at), Date.parse(a.event_end_at)]);
   } catch {
     return preferred;
   }

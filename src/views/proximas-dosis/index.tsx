@@ -1,12 +1,12 @@
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 import { formatSpecies } from '@coongro/patients';
+import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
-import { useVaccinationData } from '../../data/useVaccinationData.js';
-import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
+import { formatDate, daysUntil } from '../../components/lote-status.js';
 import { NextDoseDetailDrawer } from '../../components/NextDoseDetailDrawer.js';
 import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
-import { formatDate, daysUntil } from '../../components/lote-status.js';
+import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
+import { useVaccinationData } from '../../data/useVaccinationData.js';
 
 const React = getHostReact();
 const { useState, useMemo, useCallback } = React;
@@ -58,7 +58,7 @@ export function ProximasDosisView() {
     }
     const rows: UpcomingRow[] = [];
     for (const a of latestByKey.values()) {
-      const days = daysUntil(a.nextDoseDate as string) ?? 0;
+      const days = daysUntil(a.nextDoseDate) ?? 0;
       const scheduled = scheduledByApplied.get(a.id);
       rows.push({
         id: a.id,
@@ -69,7 +69,7 @@ export function ProximasDosisView() {
         ownerContactId: a.ownerContactId,
         staffId: a.staffId,
         productName: a.productName,
-        nextDate: a.nextDoseDate as string,
+        nextDate: a.nextDoseDate,
         days,
         status: scheduled ? 'agendada' : days < 0 ? 'vencida' : 'pendiente',
         scheduledDate: scheduled?.date ?? null,
@@ -188,7 +188,11 @@ export function ProximasDosisView() {
             UI.Badge,
             {
               variant:
-                u.status === 'vencida' ? 'danger' : u.status === 'agendada' ? 'success' : 'secondary',
+                u.status === 'vencida'
+                  ? 'danger'
+                  : u.status === 'agendada'
+                    ? 'success'
+                    : 'secondary',
             } as any,
             u.status === 'vencida' ? 'Vencida' : u.status === 'agendada' ? 'Agendada' : 'Pendiente'
           ),
@@ -250,7 +254,7 @@ export function ProximasDosisView() {
         h(
           'p',
           { className: 'text-sm text-cg-text-muted mt-1' },
-          'La agenda forward — quién toca cuándo y a quién hay que llamar.'
+          'La agenda de lo que viene — quién toca cuándo y a quién hay que llamar.'
         )
       ),
 
@@ -274,7 +278,7 @@ export function ProximasDosisView() {
             h(
               'div',
               { className: 'text-sm text-cg-danger/90 mt-0.5' },
-              'Contactá a los tutores antes de que se atrasen más.'
+              'Contactá a los dueños antes de que se atrasen más.'
             )
           ),
           h(
@@ -296,7 +300,7 @@ export function ProximasDosisView() {
           onRetry: reload,
           onRowClick: (u: UpcomingRow) => setDetailRow(u),
           columns,
-          searchPlaceholder: 'Paciente o tutor',
+          searchPlaceholder: 'Paciente o dueño',
           searchValue: search,
           onSearchChange: setSearch,
           filterSections: [

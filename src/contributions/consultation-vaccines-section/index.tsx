@@ -1,7 +1,9 @@
-import { getHostReact, getHostUI, events, actions } from '@coongro/plugin-sdk';
 import { useTenantTimezone } from '@coongro/calendar';
+import { getHostReact, getHostUI, events, actions } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
+import { formatDate } from '../../components/lote-status.js';
+import { chargeAppliedVaccine } from '../../data/billing.js';
 import {
   useVaccinationData,
   applyVaccine,
@@ -9,9 +11,7 @@ import {
   suggestFreeSlot,
   addMinutesToTime,
 } from '../../data/useVaccinationData.js';
-import { chargeAppliedVaccine } from '../../data/billing.js';
 import { useVaccinationSettings } from '../../data/useVaccinationSettings.js';
-import { formatDate } from '../../components/lote-status.js';
 
 const React = getHostReact();
 const { useState, useMemo, useEffect, useRef, useCallback } = React;
@@ -22,7 +22,9 @@ const MODULE_ID = '@coongro/vaccination';
 function toast(title: string, message: string, type: 'success' | 'info'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type, moduleId: MODULE_ID });
 }
@@ -137,9 +139,10 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
           // y para el agendado en modo auto. Lo resolvemos una sola vez.
           let owner: { ownerId: string | null; name: string } = { ownerId: null, name: '' };
           try {
-            const pets = await actions.execute<
-              Array<{ id: string; name: string; owner_id: string }>
-            >('patients.pets.list');
+            const pets =
+              await actions.execute<Array<{ id: string; name: string; owner_id: string }>>(
+                'patients.pets.list'
+              );
             const pet = pets?.find((p) => p.id === patientId);
             owner = { ownerId: pet?.owner_id ?? null, name: pet?.name ?? '' };
           } catch {
@@ -259,7 +262,12 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
       ),
       h(
         UI.Button,
-        { variant: 'outline', size: 'sm', disabled: !productId || !variantId, onClick: addVaccine } as any,
+        {
+          variant: 'outline',
+          size: 'sm',
+          disabled: !productId || !variantId,
+          onClick: addVaccine,
+        } as any,
         h(UI.DynamicIcon, { icon: 'Plus', size: 13 } as any),
         ' Agregar'
       )

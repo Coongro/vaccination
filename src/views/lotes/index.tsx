@@ -1,9 +1,6 @@
 import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
-import { LoteFormDialog } from '../../components/LoteFormDialog.js';
-import type { LoteFormData, LoteProductOption } from '../../components/LoteFormDialog.js';
-import { LoteDetailDrawer } from '../../components/LoteDetailDrawer.js';
 import {
   computeBatchStatus,
   statusBadge,
@@ -12,6 +9,9 @@ import {
   isUsable,
 } from '../../components/lote-status.js';
 import type { BatchItem } from '../../components/lote-status.js';
+import { LoteDetailDrawer } from '../../components/LoteDetailDrawer.js';
+import { LoteFormDialog } from '../../components/LoteFormDialog.js';
+import type { LoteFormData, LoteProductOption } from '../../components/LoteFormDialog.js';
 
 const React = getHostReact();
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
@@ -22,7 +22,9 @@ const MODULE_ID = '@coongro/vaccination';
 function emitToast(title: string, message: string, type: 'success' | 'info'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type, moduleId: MODULE_ID });
 }
@@ -115,7 +117,8 @@ export function LotesView() {
 
       // Solo los products que son vacunas (tienen vaccine_detail) y su laboratorio.
       const labByProductId = new Map<string, string>();
-      for (const d of details) labByProductId.set(d.product_id, labNameById.get(d.laboratory_id) ?? '');
+      for (const d of details)
+        labByProductId.set(d.product_id, labNameById.get(d.laboratory_id) ?? '');
 
       const productOptions: LoteProductOption[] = [];
       for (const d of details) {
@@ -197,7 +200,8 @@ export function LotesView() {
       const q = search.toLowerCase();
       result = result.filter((b) => b.lote.toLowerCase().includes(q));
     }
-    if (productFilter.length > 0) result = result.filter((b) => productFilter.includes(b.productId));
+    if (productFilter.length > 0)
+      result = result.filter((b) => productFilter.includes(b.productId));
     if (labFilter.length > 0) result = result.filter((b) => labFilter.includes(b.labName));
 
     if (sortKey && sortDir) {
@@ -321,8 +325,18 @@ export function LotesView() {
         sortable: true,
         render: (b: BatchItem) => h('span', { className: 'font-mono font-semibold' }, b.lote),
       },
-      { key: 'producto', header: 'Producto', sortable: true, render: (b: BatchItem) => b.productName },
-      { key: 'lab', header: 'Laboratorio', sortable: true, render: (b: BatchItem) => b.labName || '—' },
+      {
+        key: 'producto',
+        header: 'Producto',
+        sortable: true,
+        render: (b: BatchItem) => b.productName,
+      },
+      {
+        key: 'lab',
+        header: 'Laboratorio',
+        sortable: true,
+        render: (b: BatchItem) => b.labName || '—',
+      },
       {
         key: 'vencimiento',
         header: 'Vencimiento',

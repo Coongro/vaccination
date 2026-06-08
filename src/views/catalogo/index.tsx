@@ -1,5 +1,5 @@
-import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
 import { usePatientsSettings, SPECIES_LABELS, formatSpecies } from '@coongro/patients';
+import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 import { LaboratoryDrawer } from '../../components/LaboratoryDrawer.js';
@@ -20,7 +20,9 @@ const MODULE_ID = '@coongro/vaccination';
 function emitToast(title: string, message: string, type: 'success' | 'info'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type, moduleId: MODULE_ID });
 }
@@ -41,7 +43,6 @@ function uuid(): string {
   const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
-
 
 type EstadoFilter = 'activos' | 'inactivos' | 'todos';
 
@@ -154,7 +155,7 @@ export function CatalogoView() {
           detailId: d.id,
           name: p.name,
           laboratoryId: d.laboratory_id,
-          species: (d.species as string[]) ?? [],
+          species: (d.species) ?? [],
           vaccineType: d.vaccine_type as VaccineType,
           administrationRoute: d.administration_route as AdministrationRoute,
           minimumAgeMonths: d.minimum_age_months,
@@ -204,8 +205,7 @@ export function CatalogoView() {
         (v) => v.name.toLowerCase().includes(q) || (v.notes ?? '').toLowerCase().includes(q)
       );
     }
-    if (labFilter.length > 0)
-      result = result.filter((v) => labFilter.includes(v.laboratoryId));
+    if (labFilter.length > 0) result = result.filter((v) => labFilter.includes(v.laboratoryId));
     if (selectedSpecies.length > 0)
       result = result.filter((v) => selectedSpecies.some((sp) => v.species.includes(sp)));
     if (selectedTypes.length > 0)
@@ -239,19 +239,26 @@ export function CatalogoView() {
     }
 
     return result;
-  }, [items, estadoFilter, search, labFilter, selectedSpecies, selectedTypes, sortKey, sortDir, labMap]);
+  }, [
+    items,
+    estadoFilter,
+    search,
+    labFilter,
+    selectedSpecies,
+    selectedTypes,
+    sortKey,
+    sortDir,
+    labMap,
+  ]);
 
   const handleSort = useCallback((key: string, direction: 'asc' | 'desc' | null) => {
     setSortKey(direction ? key : null);
     setSortDir(direction);
   }, []);
 
-  const toggleChip = useCallback(
-    (list: string[], item: string, setter: (v: string[]) => void) => {
-      setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
-    },
-    []
-  );
+  const toggleChip = useCallback((list: string[], item: string, setter: (v: string[]) => void) => {
+    setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
+  }, []);
 
   const handleCreate = useCallback(
     async (data: CreateVaccineData) => {
@@ -357,7 +364,10 @@ export function CatalogoView() {
     async (id: string): Promise<void> => {
       const lab = labs.find((l) => l.id === id);
       await actions.execute('vaccination.laboratories.softDelete', { id });
-      toast?.success('Laboratorio eliminado', lab ? `"${lab.name}" eliminado` : 'Laboratorio eliminado');
+      toast?.success(
+        'Laboratorio eliminado',
+        lab ? `"${lab.name}" eliminado` : 'Laboratorio eliminado'
+      );
       await loadData();
     },
     [labs, loadData]
@@ -404,9 +414,18 @@ export function CatalogoView() {
         header: 'Tipo',
         sortable: true,
         render: (item: CatalogItem) =>
-          h(UI.Badge, {
-            variant: item.vaccineType === 'rabies' ? 'warning' : item.vaccineType === 'core' ? 'default' : 'outline',
-          } as any, VACCINE_TYPE_LABELS[item.vaccineType]),
+          h(
+            UI.Badge,
+            {
+              variant:
+                item.vaccineType === 'rabies'
+                  ? 'warning'
+                  : item.vaccineType === 'core'
+                    ? 'default'
+                    : 'outline',
+            } as any,
+            VACCINE_TYPE_LABELS[item.vaccineType]
+          ),
       },
       {
         key: 'schedule',
@@ -423,7 +442,11 @@ export function CatalogoView() {
         sortable: true,
         render: (item: CatalogItem) =>
           item.suggestedPrice
-            ? h('span', { className: 'font-mono' }, '$' + Number(item.suggestedPrice).toLocaleString('es-AR'))
+            ? h(
+                'span',
+                { className: 'font-mono' },
+                '$' + Number(item.suggestedPrice).toLocaleString('es-AR')
+              )
             : '—',
       },
       {
@@ -432,8 +455,11 @@ export function CatalogoView() {
         className: 'text-right',
         sortable: true,
         render: (item: CatalogItem) =>
-          h(UI.Badge, { variant: item.isActive ? 'success' : 'secondary' } as any,
-            item.isActive ? 'Activo' : 'Inactivo'),
+          h(
+            UI.Badge,
+            { variant: item.isActive ? 'success' : 'secondary' } as any,
+            item.isActive ? 'Activo' : 'Inactivo'
+          ),
       },
     ],
     [labMap]
@@ -452,9 +478,9 @@ export function CatalogoView() {
         renderChip: (val: string, onRemove: () => void) =>
           h(UI.Chip, { size: 'sm', onRemove } as any, labMap.get(val) ?? val),
       } as any,
-      ...labs.filter((lab) => lab.is_active).map((lab) =>
-        h(UI.SelectItem, { key: lab.id, value: lab.id } as any, lab.name)
-      )
+      ...labs
+        .filter((lab) => lab.is_active)
+        .map((lab) => h(UI.SelectItem, { key: lab.id, value: lab.id } as any, lab.name))
     ),
     h(
       UI.MultiSelect,
@@ -498,18 +524,33 @@ export function CatalogoView() {
           'div',
           null,
           h('h1', { className: 'text-2xl font-bold text-cg-text' }, 'Catálogo'),
-          h('p', { className: 'text-sm text-cg-text-muted mt-1' },
-            'Los productos vacunales que esta clínica tiene cargados para aplicar.')
+          h(
+            'p',
+            { className: 'text-sm text-cg-text-muted mt-1' },
+            'Los productos vacunales que esta clínica tiene cargados para aplicar.'
+          )
         ),
         h(
           'div',
           { className: 'flex gap-2 shrink-0' },
-          h(UI.Button, { variant: 'outline', onClick: () => setShowLabDrawer(true) } as any,
-            h(UI.DynamicIcon, { icon: 'Archive', size: 14 } as any), ' Gestionar laboratorios'),
-          h(UI.Button, {
-            variant: 'brand',
-            onClick: () => { setEditingVaccine(null); setShowForm(true); },
-          } as any, h(UI.DynamicIcon, { icon: 'Plus', size: 14 } as any), ' Agregar vacuna')
+          h(
+            UI.Button,
+            { variant: 'outline', onClick: () => setShowLabDrawer(true) } as any,
+            h(UI.DynamicIcon, { icon: 'Archive', size: 14 } as any),
+            ' Gestionar laboratorios'
+          ),
+          h(
+            UI.Button,
+            {
+              variant: 'brand',
+              onClick: () => {
+                setEditingVaccine(null);
+                setShowForm(true);
+              },
+            } as any,
+            h(UI.DynamicIcon, { icon: 'Plus', size: 14 } as any),
+            ' Agregar vacuna'
+          )
         )
       ),
 
@@ -518,47 +559,56 @@ export function CatalogoView() {
         'div',
         { className: 'bg-cg-bg rounded-xl border border-cg-border p-6 shadow-sm' },
         h(UI.DataTable, {
-      data: filteredItems,
-      rowKey: (item: CatalogItem) => item.productId,
-      loading,
-      error,
-      onRetry: loadData,
-      columns,
-      searchPlaceholder: 'Buscar por nombre del producto',
-      searchValue: search,
-      onSearchChange: setSearch,
-      sortKey,
-      sortDirection: sortDir,
-      onSortChange: handleSort,
-      filterSections: [
-        {
-          label: 'Estado',
-          options: [
-            { value: 'activos', label: 'Activos' },
-            { value: 'inactivos', label: 'Inactivos' },
-            { value: 'todos', label: 'Todos' },
+          data: filteredItems,
+          rowKey: (item: CatalogItem) => item.productId,
+          loading,
+          error,
+          onRetry: loadData,
+          columns,
+          searchPlaceholder: 'Buscar por nombre del producto',
+          searchValue: search,
+          onSearchChange: setSearch,
+          sortKey,
+          sortDirection: sortDir,
+          onSortChange: handleSort,
+          filterSections: [
+            {
+              label: 'Estado',
+              options: [
+                { value: 'activos', label: 'Activos' },
+                { value: 'inactivos', label: 'Inactivos' },
+                { value: 'todos', label: 'Todos' },
+              ],
+              value: estadoFilter,
+              onChange: (v: string) => setEstadoFilter(v as EstadoFilter),
+            },
           ],
-          value: estadoFilter,
-          onChange: (v: string) => setEstadoFilter(v as EstadoFilter),
-        },
-      ],
-      filterRightSlot,
-      onRowClick: (item: CatalogItem) => setDetailVaccine(item),
-      emptyState: {
-        title: 'No hay vacunas activas en este momento',
-        description: 'Cambiá el filtro de Estado a Todos para ver los inactivos, o sumá una vacuna nueva.',
-        icon: h(UI.DynamicIcon, { icon: 'Syringe', size: 32 } as any),
-        action: h(
-          'div',
-          { style: { display: 'flex', gap: '8px' } },
-          h(UI.Button, { variant: 'outline', onClick: () => setEstadoFilter('todos') } as any, 'Ver todos'),
-          h(UI.Button, { variant: 'brand', onClick: () => setShowForm(true) } as any, '+ Agregar vacuna')
-        ),
-        filteredTitle: 'No se encontraron vacunas con los filtros aplicados',
-        filteredDescription: 'Probá cambiar los filtros o la búsqueda.',
-      },
-      skeletonRows: 8,
-    } as any)
+          filterRightSlot,
+          onRowClick: (item: CatalogItem) => setDetailVaccine(item),
+          emptyState: {
+            title: 'No hay vacunas activas en este momento',
+            description:
+              'Cambiá el filtro de Estado a Todos para ver los inactivos, o sumá una vacuna nueva.',
+            icon: h(UI.DynamicIcon, { icon: 'Syringe', size: 32 } as any),
+            action: h(
+              'div',
+              { style: { display: 'flex', gap: '8px' } },
+              h(
+                UI.Button,
+                { variant: 'outline', onClick: () => setEstadoFilter('todos') } as any,
+                'Ver todos'
+              ),
+              h(
+                UI.Button,
+                { variant: 'brand', onClick: () => setShowForm(true) } as any,
+                '+ Agregar vacuna'
+              )
+            ),
+            filteredTitle: 'No se encontraron vacunas con los filtros aplicados',
+            filteredDescription: 'Probá cambiar los filtros o la búsqueda.',
+          },
+          skeletonRows: 8,
+        } as any)
       ) // cierra card wrapper
     ), // cierra flex col
 

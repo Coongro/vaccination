@@ -33,7 +33,9 @@ export function useVaccinationSettings(): VaccinationSettings {
   const duration = Number(values['vaccination.nextDoseDefaultDuration']);
   return {
     nextDoseMode: mode === 'off' || mode === 'auto' ? mode : 'ask',
-    nextDoseTime: typeof time === 'string' && /^\d{2}:\d{2}$/.test(time) ? time : DEFAULT_NEXT_DOSE_TIME,
-    nextDoseDuration: Number.isFinite(duration) && duration > 0 ? duration : DEFAULT_NEXT_DOSE_DURATION,
+    nextDoseTime:
+      typeof time === 'string' && /^\d{2}:\d{2}$/.test(time) ? time : DEFAULT_NEXT_DOSE_TIME,
+    nextDoseDuration:
+      Number.isFinite(duration) && duration > 0 ? duration : DEFAULT_NEXT_DOSE_DURATION,
   };
 }

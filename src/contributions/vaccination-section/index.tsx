@@ -1,15 +1,15 @@
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 import { formatSpecies } from '@coongro/patients';
+import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
-import { useVaccinationData, applyVaccine } from '../../data/useVaccinationData.js';
-import { chargeAppliedVaccine } from '../../data/billing.js';
-import { useVaccinationSettings } from '../../data/useVaccinationSettings.js';
-import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
 import { ApplyVaccineDialog } from '../../components/ApplyVaccineDialog.js';
-import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
 import type { ApplyFormData } from '../../components/ApplyVaccineDialog.js';
 import { formatDate } from '../../components/lote-status.js';
+import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
+import { chargeAppliedVaccine } from '../../data/billing.js';
+import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
+import { useVaccinationData, applyVaccine } from '../../data/useVaccinationData.js';
+import { useVaccinationSettings } from '../../data/useVaccinationSettings.js';
 
 const React = getHostReact();
 const { useState, useMemo, useCallback } = React;
@@ -20,7 +20,9 @@ const MODULE_ID = '@coongro/vaccination';
 function toast(title: string, message: string, type: 'success' | 'info'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type, moduleId: MODULE_ID });
 }
@@ -110,7 +112,10 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
       return;
     }
     const esc = (s: string | null | undefined) =>
-      (s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
+      (s ?? '').replace(
+        /[&<>"]/g,
+        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]
+      );
     const tutor = rows[0]?.tutor ?? '—';
     const speciesLabel = rows[0]?.species ? formatSpecies(rows[0].species) : '';
     const body = rows
@@ -132,7 +137,7 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
 </style></head><body>
   <h1>Carnet de vacunación</h1>
   <p class="sub">Emitido ${formatDate(todayKey())}</p>
-  <div class="pat"><b>${esc(petName)}</b>${speciesLabel ? ' · ' + esc(speciesLabel) : ''}<br>Tutor: ${esc(tutor)}</div>
+  <div class="pat"><b>${esc(petName)}</b>${speciesLabel ? ' · ' + esc(speciesLabel) : ''}<br>Dueño: ${esc(tutor)}</div>
   <table><thead><tr><th>Fecha</th><th>Producto</th><th>Lote</th><th>Peso</th><th>Profesional</th></tr></thead>
   <tbody>${body || '<tr><td colspan="5">Sin aplicaciones registradas.</td></tr>'}</tbody></table>
   <p class="foot">Documento operativo sin valor legal. Generado por Coongro.</p>
@@ -218,7 +223,11 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
                 h('span', { className: 'font-mono text-cg-text-muted' }, formatDate(r.appliedDate)),
                 h('span', { className: 'font-medium' }, r.productName),
                 h('span', { className: 'font-mono text-cg-text-muted' }, r.lote),
-                h('span', { className: 'font-mono text-cg-text-muted' }, r.weightKg ? `${r.weightKg} kg` : '—'),
+                h(
+                  'span',
+                  { className: 'font-mono text-cg-text-muted' },
+                  r.weightKg ? `${r.weightKg} kg` : '—'
+                ),
                 h('span', { className: 'text-cg-text-muted' }, r.vetName)
               )
             )

@@ -1,7 +1,11 @@
-import { eq, isNull, desc } from 'drizzle-orm';
 import type { ModuleDatabaseAPI } from '@coongro/plugin-sdk';
+import { eq, isNull, desc } from 'drizzle-orm';
+
 import { appliedVaccinationTable } from '../schema/applied-vaccination.js';
-import type { AppliedVaccinationRow, NewAppliedVaccinationRow } from '../schema/applied-vaccination.js';
+import type {
+  AppliedVaccinationRow,
+  NewAppliedVaccinationRow,
+} from '../schema/applied-vaccination.js';
 
 export class AppliedVaccinationRepository {
   constructor(private readonly db: ModuleDatabaseAPI) {}
@@ -24,14 +28,22 @@ export class AppliedVaccinationRepository {
   }
 
   async create({ data }: { data: NewAppliedVaccinationRow }): Promise<AppliedVaccinationRow[]> {
-    return this.db.ormQuery((tx) =>
-      tx.insert(appliedVaccinationTable).values(data).returning()
-    );
+    return this.db.ormQuery((tx) => tx.insert(appliedVaccinationTable).values(data).returning());
   }
 
-  async update({ id, data }: { id: string; data: Partial<NewAppliedVaccinationRow> }): Promise<AppliedVaccinationRow[]> {
+  async update({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Partial<NewAppliedVaccinationRow>;
+  }): Promise<AppliedVaccinationRow[]> {
     return this.db.ormQuery((tx) =>
-      tx.update(appliedVaccinationTable).set(data).where(eq(appliedVaccinationTable.id, id)).returning()
+      tx
+        .update(appliedVaccinationTable)
+        .set(data)
+        .where(eq(appliedVaccinationTable.id, id))
+        .returning()
     );
   }
 

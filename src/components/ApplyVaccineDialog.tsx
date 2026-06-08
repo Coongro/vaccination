@@ -1,6 +1,6 @@
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 import { DatePicker } from '@coongro/calendar';
 import { PetPicker } from '@coongro/patients';
+import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 import { StaffPicker } from '@coongro/staff';
 
 const UI = getHostUI();
@@ -200,7 +200,10 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
     if (nextTouchedRef.current) return;
     const interval = selectedProduct?.scheduleIntervalDays;
     if (form.appliedDate && interval && interval > 0) {
-      setForm((prev: FormState) => ({ ...prev, nextDoseDate: addDays(prev.appliedDate, interval) }));
+      setForm((prev: FormState) => ({
+        ...prev,
+        nextDoseDate: addDays(prev.appliedDate, interval),
+      }));
     }
   }, [form.appliedDate, selectedProduct]);
 
@@ -258,7 +261,11 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
           { icon: 'PawPrint', title: 'Paciente' } as any,
           h(
             FieldGroup,
-            { label: 'Paciente', required: true, error: touched.has('patientId') && errors.patientId },
+            {
+              label: 'Paciente',
+              required: true,
+              error: touched.has('patientId') && errors.patientId,
+            },
             fixedPatientId
               ? h(UI.Input, { value: fixedPatientLabel ?? 'Paciente', disabled: true } as any)
               : h(PetPicker, {
@@ -456,7 +463,7 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
             h(UI.Textarea, {
               value: form.notes,
               onChange: (e: any) => setField('notes', e.target.value),
-              placeholder: 'Opcional · reacciones, indicaciones para el tutor…',
+              placeholder: 'Opcional · reacciones, indicaciones para el dueño…',
               rows: 2,
             } as any)
           )

@@ -2,6 +2,7 @@ import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 import type { LaboratoryRow } from '../schema/laboratory.js';
+
 import { AddLabDialog } from './AddLabDialog.js';
 
 const React = getHostReact();
@@ -195,7 +196,11 @@ export function LaboratoryDrawer(props: LaboratoryDrawerProps) {
                         ),
                         h(
                           UI.Button,
-                          { variant: 'ghost', size: 'sm', onClick: () => setEditingId(null) } as any,
+                          {
+                            variant: 'ghost',
+                            size: 'sm',
+                            onClick: () => setEditingId(null),
+                          } as any,
                           'X'
                         )
                       )

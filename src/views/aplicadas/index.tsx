@@ -1,13 +1,13 @@
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 import { formatSpecies, SPECIES_LABELS } from '@coongro/patients';
+import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
+import { AppliedDetailDrawer } from '../../components/AppliedDetailDrawer.js';
+import { formatDate } from '../../components/lote-status.js';
+import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
+import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
 import { useVaccinationData } from '../../data/useVaccinationData.js';
 import type { AppliedItem } from '../../data/useVaccinationData.js';
-import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
-import { AppliedDetailDrawer } from '../../components/AppliedDetailDrawer.js';
-import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
-import { formatDate } from '../../components/lote-status.js';
 
 const React = getHostReact();
 const { useState, useEffect, useMemo, useRef, useCallback } = React;
@@ -18,7 +18,9 @@ const MODULE_ID = '@coongro/vaccination';
 function emitToast(title: string, message: string, type: 'success' | 'info'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type, moduleId: MODULE_ID });
 }
@@ -45,8 +47,14 @@ interface AplicadasViewProps {
 export function AplicadasView(props: AplicadasViewProps = {}) {
   // El alta NO vive acá (diseño COONG-182: Aplicadas es solo lectura). El registro
   // de una aplicación se hace desde la ficha del paciente o desde la consulta.
-  const { appliedItems: items, products, scheduledByApplied, loading, error, reload } =
-    useVaccinationData();
+  const {
+    appliedItems: items,
+    products,
+    scheduledByApplied,
+    loading,
+    error,
+    reload,
+  } = useVaccinationData();
   const { openSchedule, verTurno, scheduleDialogProps } = useNextDoseScheduler(reload);
 
   const [detailItem, setDetailItem] = useState<AppliedItem | null>(null);
@@ -108,7 +116,8 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
     if (productFilter.length > 0)
       result = result.filter((it) => productFilter.includes(it.productId));
     if (staffFilter.length > 0) result = result.filter((it) => staffFilter.includes(it.staffId));
-    if (speciesFilter.length > 0) result = result.filter((it) => speciesFilter.includes(it.species));
+    if (speciesFilter.length > 0)
+      result = result.filter((it) => speciesFilter.includes(it.species));
 
     if (sortKey && sortDir) {
       const dir = sortDir === 'asc' ? 1 : -1;
@@ -187,7 +196,7 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
       'Fecha',
       'Paciente',
       'Especie',
-      'Tutor',
+      'Dueño',
       'Producto',
       'Lote',
       'Profesional',
@@ -271,7 +280,9 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
         header: 'Próx. dosis',
         sortable: true,
         render: (it: AppliedItem) =>
-          it.nextDoseDate ? h('span', { className: 'font-mono' }, formatDate(it.nextDoseDate)) : '—',
+          it.nextDoseDate
+            ? h('span', { className: 'font-mono' }, formatDate(it.nextDoseDate))
+            : '—',
       },
     ],
     []
@@ -349,7 +360,7 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
           h(
             'p',
             { className: 'text-sm text-cg-text-muted mt-1' },
-            'Histórico cross-paciente. Filtrá para ver dosis de un lote, paciente o profesional puntual.'
+            'Historial de todos los pacientes. Filtrá para ver dosis de un lote, paciente o profesional puntual.'
           )
         ),
         h(

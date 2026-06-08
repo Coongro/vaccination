@@ -1,5 +1,5 @@
-import { integer, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { integer, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const appliedVaccinationTable = pgTable('module_vaccination_applied_vaccinations', {
   id: uuid('id').primaryKey().notNull(),
@@ -12,8 +12,12 @@ export const appliedVaccinationTable = pgTable('module_vaccination_applied_vacci
   dose_number: integer('dose_number'),
   next_dose_date: text('next_dose_date'),
   notes: text('notes'),
-  created_at: timestamp('created_at', { mode: 'string' }).notNull().default(sql`now()`),
-  updated_at: timestamp('updated_at', { mode: 'string' }).notNull().default(sql`now()`),
+  created_at: timestamp('created_at', { mode: 'string' })
+    .notNull()
+    .default(sql`now()`),
+  updated_at: timestamp('updated_at', { mode: 'string' })
+    .notNull()
+    .default(sql`now()`),
   deleted_at: timestamp('deleted_at', { mode: 'string' }),
 });
 

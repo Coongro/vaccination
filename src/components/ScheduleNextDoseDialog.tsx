@@ -1,6 +1,6 @@
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 import { DatePicker, TimePicker, useTenantTimezone } from '@coongro/calendar';
 import { formatSpecies } from '@coongro/patients';
+import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 import {
@@ -9,6 +9,7 @@ import {
   addMinutesToTime,
 } from '../data/useVaccinationData.js';
 import { useVaccinationSettings } from '../data/useVaccinationSettings.js';
+
 import { formatDate } from './lote-status.js';
 
 const React = getHostReact();
@@ -20,7 +21,9 @@ const MODULE_ID = '@coongro/vaccination';
 function toast(title: string, message: string, type: 'success' | 'info'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type, moduleId: MODULE_ID });
 }
@@ -70,7 +73,11 @@ function FieldGroup({ label, required, hint, children }: any) {
  * sugerido, fin = inicio + duración del setting) y editable con los selectores de
  * Coongro. Lo usan el botón "Agendar" (worklist + detalle) y el modo "ask" del setting.
  */
-export function ScheduleNextDoseDialog({ input, onClose, onScheduled }: ScheduleNextDoseDialogProps) {
+export function ScheduleNextDoseDialog({
+  input,
+  onClose,
+  onScheduled,
+}: ScheduleNextDoseDialogProps) {
   const tz = useTenantTimezone();
   const { nextDoseTime, nextDoseDuration } = useVaccinationSettings();
 
@@ -169,7 +176,7 @@ export function ScheduleNextDoseDialog({ input, onClose, onScheduled }: Schedule
         h(
           'p',
           { className: 'text-[13px] text-cg-text-muted leading-relaxed' },
-          'Creás un turno en la agenda para aplicar la próxima dosis de vacunación. Es tentativo: coordiná día y hora con el tutor.'
+          'Creás un turno en la agenda para aplicar la próxima dosis de vacunación. Es tentativo: coordiná día y hora con el dueño.'
         ),
 
         // Resumen de lo que se agenda: vacuna como título + paciente/especie/tutor debajo.
@@ -195,7 +202,7 @@ export function ScheduleNextDoseDialog({ input, onClose, onScheduled }: Schedule
                 [
                   input.patientName,
                   input.species ? formatSpecies(input.species) : null,
-                  input.tutorName ? `Tutor: ${input.tutorName}` : null,
+                  input.tutorName ? `Dueño: ${input.tutorName}` : null,
                 ]
                   .filter(Boolean)
                   .join(' · ')

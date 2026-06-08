@@ -2,6 +2,7 @@ import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 import { formatSpecies } from '@coongro/patients';
+
 import type { VaccineCatalogItem } from '../hooks/useVaccineCatalog.js';
 import { VACCINE_TYPE_LABELS, ADMINISTRATION_ROUTE_LABELS } from '../types/vaccination.js';
 
@@ -154,7 +155,8 @@ export function ProductDetailDrawer(props: ProductDetailDrawerProps) {
           UI.Button,
           {
             variant: 'outline',
-            onClick: () => views.open('vaccination.aplicadas.open', { productId: vaccine.productId }),
+            onClick: () =>
+              views.open('vaccination.aplicadas.open', { productId: vaccine.productId }),
           } as any,
           h(UI.DynamicIcon, { icon: 'ExternalLink', size: 13 } as any),
           ' Ver aplicadas'

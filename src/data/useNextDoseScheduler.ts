@@ -1,5 +1,8 @@
-import { getHostReact, views } from '@coongro/plugin-sdk';
 import { useTenantTimezone } from '@coongro/calendar';
+import { getHostReact, views } from '@coongro/plugin-sdk';
+
+import { formatDate } from '../components/lote-status.js';
+import type { ScheduleInput } from '../components/ScheduleNextDoseDialog.js';
 
 import {
   scheduleNextDoseAppointment,
@@ -7,8 +10,6 @@ import {
   addMinutesToTime,
 } from './useVaccinationData.js';
 import { useVaccinationSettings } from './useVaccinationSettings.js';
-import { formatDate } from '../components/lote-status.js';
-import type { ScheduleInput } from '../components/ScheduleNextDoseDialog.js';
 
 const React = getHostReact();
 const { useState, useCallback } = React;
@@ -18,7 +19,9 @@ const MODULE_ID = '@coongro/vaccination';
 function toast(title: string, message: string, type: 'success' | 'info'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type, moduleId: MODULE_ID });
 }

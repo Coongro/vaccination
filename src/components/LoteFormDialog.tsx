@@ -1,5 +1,5 @@
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 import { DatePicker } from '@coongro/calendar';
+import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 
@@ -200,50 +200,50 @@ export function LoteFormDialog(props: LoteFormDialogProps) {
           { icon: 'Syringe', title: 'Producto' } as any,
           // El laboratorio se infiere del producto seleccionado.
           h(
-          FieldGroup,
-          {
-            label: 'Producto',
-            required: true,
-            error: touched.has('productId') && errors.productId,
-            hint: selectedProduct
-              ? h(
-                  'span',
-                  null,
-                  'Laboratorio: ',
-                  h('strong', { className: 'text-cg-text' }, selectedProduct.labName || '—')
-                )
-              : null,
-          },
-          isEditing
-            ? // En edición no se cambia el producto (afectaría el catálogo/stock); solo lectura.
-              h(UI.Input, {
-                value: selectedProduct?.name ?? '',
-                disabled: true,
-              } as any)
-            : h(
-                UI.Combobox,
-                {
-                  value: form.productId,
-                  onValueChange: (v: string) => {
-                    setField('productId', v);
-                    touch('productId');
-                  },
-                } as any,
-                h(UI.ComboboxChipTrigger, {
-                  placeholder: 'Buscar en el catálogo…',
-                  renderChip: (val: string, onRemove: () => void) => {
-                    const p = products.find((x) => x.productId === val);
-                    return h(UI.Chip, { size: 'sm', onRemove } as any, p?.name ?? val);
-                  },
-                } as any),
-                h(
-                  UI.ComboboxContent,
-                  null,
-                  ...products.map((p) =>
-                    h(UI.ComboboxItem, { key: p.productId, value: p.productId } as any, p.name)
+            FieldGroup,
+            {
+              label: 'Producto',
+              required: true,
+              error: touched.has('productId') && errors.productId,
+              hint: selectedProduct
+                ? h(
+                    'span',
+                    null,
+                    'Laboratorio: ',
+                    h('strong', { className: 'text-cg-text' }, selectedProduct.labName || '—')
+                  )
+                : null,
+            },
+            isEditing
+              ? // En edición no se cambia el producto (afectaría el catálogo/stock); solo lectura.
+                h(UI.Input, {
+                  value: selectedProduct?.name ?? '',
+                  disabled: true,
+                } as any)
+              : h(
+                  UI.Combobox,
+                  {
+                    value: form.productId,
+                    onValueChange: (v: string) => {
+                      setField('productId', v);
+                      touch('productId');
+                    },
+                  } as any,
+                  h(UI.ComboboxChipTrigger, {
+                    placeholder: 'Buscar en el catálogo…',
+                    renderChip: (val: string, onRemove: () => void) => {
+                      const p = products.find((x) => x.productId === val);
+                      return h(UI.Chip, { size: 'sm', onRemove } as any, p?.name ?? val);
+                    },
+                  } as any),
+                  h(
+                    UI.ComboboxContent,
+                    null,
+                    ...products.map((p) =>
+                      h(UI.ComboboxItem, { key: p.productId, value: p.productId } as any, p.name)
+                    )
                   )
                 )
-              )
           )
         ),
 
@@ -252,83 +252,87 @@ export function LoteFormDialog(props: LoteFormDialogProps) {
           UI.FormSection,
           { icon: 'Box', title: 'Datos del lote' } as any,
           h(
-          FieldGroup,
-          {
-            label: 'Nro. de lote',
-            required: true,
-            error: touched.has('lote') && errors.lote,
-          },
-          h(UI.Input, {
-            value: form.lote,
-            onChange: (e: any) => setField('lote', e.target.value),
-            onBlur: () => touch('lote'),
-            placeholder: 'Ej: L2025C-00441',
-            className: 'font-mono',
-          } as any)
-        ),
-
-        h(
-          'div',
-          { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3' },
-          h(
             FieldGroup,
             {
-              label: 'Fecha de vencimiento',
+              label: 'Nro. de lote',
               required: true,
-              error: touched.has('expiresAt') && errors.expiresAt,
-              hint: expiredWarning ? null : 'Formato dd/mm/aaaa',
-            },
-            h(DatePicker, {
-              value: form.expiresAt,
-              onChange: (v: string) => {
-                setField('expiresAt', v);
-                touch('expiresAt');
-              },
-              placeholder: 'Seleccionar fecha',
-            } as any)
-          ),
-          h(
-            FieldGroup,
-            {
-              label: 'Dosis recibidas',
-              required: true,
-              error: touched.has('received') && errors.received,
+              error: touched.has('lote') && errors.lote,
             },
             h(UI.Input, {
-              type: 'number',
-              min: 1,
-              value: form.received,
-              onChange: (e: any) => setField('received', e.target.value),
-              onBlur: () => touch('received'),
-              placeholder: 'Ej: 25',
-              disabled: isEditing,
+              value: form.lote,
+              onChange: (e: any) => setField('lote', e.target.value),
+              onBlur: () => touch('lote'),
+              placeholder: 'Ej: L2025C-00441',
+              className: 'font-mono',
             } as any)
-          )
-        ),
+          ),
 
-        // Aviso de lote vencido (no bloquea el guardado).
-        expiredWarning &&
           h(
             'div',
-            {
-              className:
-                'flex items-start gap-2 rounded-lg border border-cg-warning-border bg-cg-warning-bg px-3 py-2.5 text-xs text-cg-warning-text leading-relaxed',
-            },
-            h(UI.DynamicIcon, { icon: 'TriangleAlert', size: 14, className: 'mt-0.5 shrink-0' } as any),
+            { className: 'grid grid-cols-1 sm:grid-cols-2 gap-3' },
             h(
-              'span',
-              null,
-              h('strong', null, 'Este lote está vencido.'),
-              ' Igual lo podés guardar — queda registrado con estado "Vencido" y no se usará al aplicar.'
+              FieldGroup,
+              {
+                label: 'Fecha de vencimiento',
+                required: true,
+                error: touched.has('expiresAt') && errors.expiresAt,
+                hint: expiredWarning ? null : 'Formato dd/mm/aaaa',
+              },
+              h(DatePicker, {
+                value: form.expiresAt,
+                onChange: (v: string) => {
+                  setField('expiresAt', v);
+                  touch('expiresAt');
+                },
+                placeholder: 'Seleccionar fecha',
+              } as any)
+            ),
+            h(
+              FieldGroup,
+              {
+                label: 'Dosis recibidas',
+                required: true,
+                error: touched.has('received') && errors.received,
+              },
+              h(UI.Input, {
+                type: 'number',
+                min: 1,
+                value: form.received,
+                onChange: (e: any) => setField('received', e.target.value),
+                onBlur: () => touch('received'),
+                placeholder: 'Ej: 25',
+                disabled: isEditing,
+              } as any)
             )
           ),
 
-        isEditing &&
-          h(
-            'p',
-            { className: 'text-xs text-cg-text-muted leading-relaxed' },
-            'Las dosis recibidas no se editan acá para no descuadrar el stock. Para ajustar cantidades, dá de baja el lote y cargá uno nuevo.'
-          )
+          // Aviso de lote vencido (no bloquea el guardado).
+          expiredWarning &&
+            h(
+              'div',
+              {
+                className:
+                  'flex items-start gap-2 rounded-lg border border-cg-warning-border bg-cg-warning-bg px-3 py-2.5 text-xs text-cg-warning-text leading-relaxed',
+              },
+              h(UI.DynamicIcon, {
+                icon: 'TriangleAlert',
+                size: 14,
+                className: 'mt-0.5 shrink-0',
+              } as any),
+              h(
+                'span',
+                null,
+                h('strong', null, 'Este lote está vencido.'),
+                ' Igual lo podés guardar — queda registrado con estado "Vencido" y no se usará al aplicar.'
+              )
+            ),
+
+          isEditing &&
+            h(
+              'p',
+              { className: 'text-xs text-cg-text-muted leading-relaxed' },
+              'Las dosis recibidas no se editan acá para no descuadrar el stock. Para ajustar cantidades, dá de baja el lote y cargá uno nuevo.'
+            )
         ),
 
         // === Notas ===
@@ -336,14 +340,14 @@ export function LoteFormDialog(props: LoteFormDialogProps) {
           UI.FormSection,
           { icon: 'FileText', title: 'Notas' } as any,
           h(
-          FieldGroup,
-          { label: 'Notas' },
-          h(UI.Textarea, {
-            value: form.notes,
-            onChange: (e: any) => setField('notes', e.target.value),
-            placeholder: 'Opcional · ej: lote refrigerado, comprado en X distribuidora…',
-            rows: 2,
-          } as any)
+            FieldGroup,
+            { label: 'Notas' },
+            h(UI.Textarea, {
+              value: form.notes,
+              onChange: (e: any) => setField('notes', e.target.value),
+              placeholder: 'Opcional · ej: lote refrigerado, comprado en X distribuidora…',
+              rows: 2,
+            } as any)
           )
         )
       );

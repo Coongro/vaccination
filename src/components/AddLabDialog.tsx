@@ -70,11 +70,7 @@ export function AddLabDialog(props: AddLabDialogProps) {
             autoFocus: true,
           } as any),
           duplicateError &&
-            h(
-              'span',
-              { style: { fontSize: '12px', color: 'var(--cg-danger)' } },
-              duplicateError
-            )
+            h('span', { style: { fontSize: '12px', color: 'var(--cg-danger)' } }, duplicateError)
         ),
         h(
           'p',

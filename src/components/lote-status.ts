@@ -70,14 +70,10 @@ export function isUsable(status: BatchStatus): boolean {
 }
 
 export function statusBadge(status: BatchStatus): unknown {
-  if (status === 'activo')
-    return h(UI.Badge, { variant: 'success' } as any, 'Activo');
-  if (status === 'vencido')
-    return h(UI.Badge, { variant: 'danger' } as any, 'Vencido');
-  if (status === 'agotado')
-    return h(UI.Badge, { variant: 'secondary' } as any, 'Agotado');
-  if (status === 'baja')
-    return h(UI.Badge, { variant: 'secondary' } as any, 'Dado de baja');
+  if (status === 'activo') return h(UI.Badge, { variant: 'success' } as any, 'Activo');
+  if (status === 'vencido') return h(UI.Badge, { variant: 'danger' } as any, 'Vencido');
+  if (status === 'agotado') return h(UI.Badge, { variant: 'secondary' } as any, 'Agotado');
+  if (status === 'baja') return h(UI.Badge, { variant: 'secondary' } as any, 'Dado de baja');
   // por-vencer
   const label =
     status.days <= 0

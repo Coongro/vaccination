@@ -118,7 +118,11 @@ export function LoteDetailDrawer(props: LoteDetailDrawerProps) {
                   },
                 },
                 h('span', { style: { color: 'var(--cg-text-muted)' } }, label),
-                h('span', { style: { color: 'var(--cg-text)', textAlign: 'right' } }, value as never)
+                h(
+                  'span',
+                  { style: { color: 'var(--cg-text)', textAlign: 'right' } },
+                  value as never
+                )
               )
             )
           )

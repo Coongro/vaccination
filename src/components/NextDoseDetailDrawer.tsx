@@ -1,10 +1,11 @@
-import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 import { formatSpecies } from '@coongro/patients';
+import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
-import { formatDate } from './lote-status.js';
 import type { AppliedItem } from '../data/useVaccinationData.js';
 import type { UpcomingRow } from '../views/proximas-dosis/index.js';
+
+import { formatDate } from './lote-status.js';
 
 const React = getHostReact();
 const h = React.createElement;
@@ -14,7 +15,9 @@ const MODULE_ID = '@coongro/vaccination';
 function toast(title: string, message: string): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
-    | { show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void }
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
     | undefined;
   host?.show?.({ title, message, type: 'info', moduleId: MODULE_ID });
 }
@@ -100,7 +103,7 @@ export function NextDoseDetailDrawer(props: NextDoseDetailDrawerProps) {
     );
 
   const contactRows: [string, unknown][] = [
-    ['Tutor', h('span', { style: { fontWeight: 600 } }, row.tutor)],
+    ['Dueño', h('span', { style: { fontWeight: 600 } }, row.tutor)],
     [
       'Teléfono',
       trigger?.tutorPhone ? copyField(trigger.tutorPhone, 'Teléfono', true) : muted(null),
@@ -111,7 +114,10 @@ export function NextDoseDetailDrawer(props: NextDoseDetailDrawerProps) {
   const triggerRows: [string, unknown][] = [
     ['Producto', row.productName],
     ['Lote', trigger ? h('span', { style: mono }, trigger.lote) : muted(null)],
-    ['Aplicada', trigger ? h('span', { style: mono }, formatDate(trigger.appliedDate)) : muted(null)],
+    [
+      'Aplicada',
+      trigger ? h('span', { style: mono }, formatDate(trigger.appliedDate)) : muted(null),
+    ],
     ['Profesional', muted(trigger && trigger.vetName !== '—' ? trigger.vetName : null)],
   ];
 
@@ -145,7 +151,9 @@ export function NextDoseDetailDrawer(props: NextDoseDetailDrawerProps) {
     { open, onOpenChange: (val: boolean) => !val && onClose(), side: 'right' } as any,
     h(
       UI.SheetContent,
-      { style: { width: '480px', maxWidth: '92vw', display: 'flex', flexDirection: 'column' } } as any,
+      {
+        style: { width: '480px', maxWidth: '92vw', display: 'flex', flexDirection: 'column' },
+      } as any,
 
       // Header
       h(
@@ -187,7 +195,7 @@ export function NextDoseDetailDrawer(props: NextDoseDetailDrawerProps) {
         'div',
         { style: { flex: 1, overflow: 'auto', padding: '20px 24px' } },
 
-        sectionTitle('Contacto del tutor'),
+        sectionTitle('Contacto del dueño'),
         renderRows(contactRows),
 
         sectionTitle('Última aplicación'),
@@ -201,7 +209,14 @@ export function NextDoseDetailDrawer(props: NextDoseDetailDrawerProps) {
             sectionTitle('Otras próximas dosis de este paciente'),
             h(
               'div',
-              { style: { display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' } },
+              {
+                style: {
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  marginBottom: '8px',
+                },
+              },
               ...otherDoses.map((d) =>
                 h(
                   'div',
@@ -222,7 +237,11 @@ export function NextDoseDetailDrawer(props: NextDoseDetailDrawerProps) {
                   h(
                     'div',
                     { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
-                    h('span', { style: { ...mono, color: 'var(--cg-text-muted)' } }, formatDate(d.nextDate)),
+                    h(
+                      'span',
+                      { style: { ...mono, color: 'var(--cg-text-muted)' } },
+                      formatDate(d.nextDate)
+                    ),
                     statusBadge(d.status)
                   )
                 )
@@ -247,7 +266,8 @@ export function NextDoseDetailDrawer(props: NextDoseDetailDrawerProps) {
           UI.Button,
           {
             variant: 'outline',
-            onClick: () => row.patientId && views.open('patients.detail.open', { petId: row.patientId }),
+            onClick: () =>
+              row.patientId && views.open('patients.detail.open', { petId: row.patientId }),
           } as any,
           h(UI.DynamicIcon, { icon: 'ExternalLink', size: 13 } as any),
           ' Ver paciente'

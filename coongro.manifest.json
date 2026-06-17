@@ -88,7 +88,8 @@
         "component": "./dist/contributions/vaccination-section/index.js",
         "export": "VaccinationSection",
         "order": 35,
-        "label": "Vacunación"
+        "label": "Vacunación",
+        "icon": "Syringe"
       },
       {
         "targetViewId": "consultations.form.open",
@@ -111,8 +112,8 @@
         {
           "id": "vaccination.general",
           "group": "vaccination",
-          "label": "General",
-          "icon": "assets/icons/general.svg",
+          "label": "Próximas dosis",
+          "icon": "assets/icons/syringe.svg",
           "order": 10
         }
       ],

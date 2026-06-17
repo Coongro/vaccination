@@ -42,6 +42,14 @@ type RangeFilter = '7d' | '30d' | 'mes' | 'todos';
 interface AplicadasViewProps {
   productId?: string;
   lote?: string;
+  /**
+   * Al abrir desde el carnet de la ficha (COONG-210): nombre de la mascota
+   * (siembra el buscador) + dueño (siembra el filtro "Dueño"). Juntos
+   * desambiguan el caso de mascotas con el mismo nombre de distintos dueños.
+   * Ambos quedan visibles y borrables (no hay filtro oculto).
+   */
+  patientName?: string;
+  ownerContactId?: string;
 }
 
 export function AplicadasView(props: AplicadasViewProps = {}) {
@@ -63,6 +71,7 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
   const [productFilter, setProductFilter] = useState<string[]>([]);
   const [staffFilter, setStaffFilter] = useState<string[]>([]);
   const [speciesFilter, setSpeciesFilter] = useState<string[]>([]);
+  const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
 
@@ -71,14 +80,25 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
-    if (props.productId || props.lote) setRange('todos');
+    if (props.productId || props.lote || props.patientName || props.ownerContactId)
+      setRange('todos');
     if (props.productId) setProductFilter([props.productId]);
     if (props.lote) setSearch(props.lote);
-  }, [props.productId, props.lote]);
+    // Desde el carnet: nombre en el buscador + dueño en el filtro "Dueño".
+    // Juntos identifican a la mascota aunque haya nombres repetidos.
+    if (props.patientName) setSearch(props.patientName);
+    if (props.ownerContactId) setOwnerFilter([props.ownerContactId]);
+  }, [props.productId, props.lote, props.patientName, props.ownerContactId]);
 
   const staffOptions = useMemo(() => {
     const map = new Map<string, string>();
     for (const it of items) if (it.staffId) map.set(it.staffId, it.vetName);
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [items]);
+
+  const ownerOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const it of items) if (it.ownerContactId) map.set(it.ownerContactId, it.tutor);
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [items]);
 
@@ -118,6 +138,8 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
     if (staffFilter.length > 0) result = result.filter((it) => staffFilter.includes(it.staffId));
     if (speciesFilter.length > 0)
       result = result.filter((it) => speciesFilter.includes(it.species));
+    if (ownerFilter.length > 0)
+      result = result.filter((it) => ownerFilter.includes(it.ownerContactId));
 
     if (sortKey && sortDir) {
       const dir = sortDir === 'asc' ? 1 : -1;
@@ -149,7 +171,17 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
     }
 
     return result;
-  }, [items, range, search, productFilter, staffFilter, speciesFilter, sortKey, sortDir]);
+  }, [
+    items,
+    range,
+    search,
+    productFilter,
+    staffFilter,
+    speciesFilter,
+    ownerFilter,
+    sortKey,
+    sortDir,
+  ]);
 
   const handleSort = (key: string, direction: 'asc' | 'desc' | null) => {
     setSortKey(direction ? key : null);
@@ -291,6 +323,22 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
   const filterRightSlot = h(
     'div',
     { className: 'flex gap-2 flex-wrap' },
+    h(
+      UI.MultiSelect,
+      {
+        values: ownerFilter,
+        onValuesChange: (v: string[]) => setOwnerFilter(v),
+        placeholder: 'Dueño',
+        className: 'w-[180px]',
+        renderChip: (val: string, onRemove: () => void) =>
+          h(
+            UI.Chip,
+            { size: 'sm', onRemove } as any,
+            ownerOptions.find((o) => o.id === val)?.name ?? val
+          ),
+      } as any,
+      ...ownerOptions.map((o) => h(UI.SelectItem, { key: o.id, value: o.id } as any, o.name))
+    ),
     h(
       UI.MultiSelect,
       {

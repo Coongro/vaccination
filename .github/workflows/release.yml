@@ -4,6 +4,10 @@ on:
   push:
     branches: [staging]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
     name: Version or Publish
@@ -23,8 +27,8 @@ jobs:
 
       - name: Configure @coongro registry
         run: |
-          echo "@coongro:registry=${{ secrets.STAGING_VERDACCIO_URL }}" > .npmrc
-          echo "//${{ secrets.STAGING_VERDACCIO_URL_HOST }}/:_authToken=${{ secrets.STAGING_VERDACCIO_TOKEN }}" >> .npmrc
+          echo "@coongro:registry=\${{ secrets.STAGING_VERDACCIO_URL }}" > .npmrc
+          echo "//\${{ secrets.STAGING_VERDACCIO_URL_HOST }}/:_authToken=\${{ secrets.STAGING_VERDACCIO_TOKEN }}" >> .npmrc
 
       - name: Install dependencies
         run: |
@@ -36,12 +40,12 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: sh scripts/changeset-version.sh
-          publish: npm publish --ignore-scripts --registry ${{ secrets.STAGING_VERDACCIO_URL }}
+          version: publish: npm publish --ignore-scripts --registry ${{ secrets.STAGING_VERDACCIO_URL }}
+          publish: npm publish --ignore-scripts --registry \${{ secrets.STAGING_VERDACCIO_URL }}
           title: "Version Packages"
           commit: "chore: version packages"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
         if: steps.changesets.outputs.published == 'true'
@@ -51,21 +55,16 @@ jobs:
           echo "### Published $NAME@$VERSION to staging" >> $GITHUB_STEP_SUMMARY
 
       - name: Sync develop with staging
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin develop
           git checkout develop
-          git merge staging --no-edit || {
+          if git merge origin/staging --no-edit; then
+            git push origin develop
+            echo "### ✅ develop synced with staging" >> $GITHUB_STEP_SUMMARY
+          else
             git merge --abort
-            gh pr create \
-              --base develop \
-              --head staging \
-              --title "sync: merge staging into develop (conflicts)" \
-              --body "Merge automático de staging a develop falló por conflictos. Resolver manualmente."
-            echo "::warning::Conflictos al sincronizar develop. PR creado."
-            exit 0
-          }
-          git push origin develop
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            echo "### ⚠️ Conflicts syncing develop ← staging. Manual sync required." >> $GITHUB_STEP_SUMMARY
+          fi

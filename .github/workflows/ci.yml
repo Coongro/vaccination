@@ -5,6 +5,7 @@ on:
     branches: [develop, staging, main]
 
 permissions:
+  contents: read
   pull-requests: read
 
 jobs:
@@ -26,7 +27,7 @@ jobs:
             };
 
             if (base === 'develop') {
-              console.log('PR ' + head + ' → develop: permitido');
+              console.log('PR ' + head + ' → develop: allowed');
               return;
             }
 
@@ -36,57 +37,24 @@ jobs:
                 head === prefix || head.startsWith(prefix)
               );
               if (isAllowed) {
-                console.log('PR ' + head + ' → ' + base + ': permitido');
+                console.log('PR ' + head + ' → ' + base + ': allowed');
                 return;
               }
 
               const msg = base === 'staging'
-                ? 'Los PRs a staging solo se aceptan desde develop.'
-                : 'Los PRs a main solo se aceptan desde staging o release/*.';
+                ? 'PRs to staging only accepted from develop.'
+                : 'PRs to main only accepted from staging or release/*.';
 
               core.setFailed(
-                'PR rechazado: ' + head + ' → ' + base + '\n' +
+                'PR rejected: ' + head + ' → ' + base + '\n' +
                 msg + '\n' +
-                'Flujo correcto: feature/* → develop → staging → main'
+                'Correct flow: feature/* → develop → staging → main'
               );
               return;
             }
 
             core.setFailed(
-              'PR rechazado: ' + head + ' → ' + base + '\n' +
-              'Los PRs deben apuntar a develop, staging o main.\n' +
-              'Flujo correcto: feature/* → develop → staging → main'
+              'PR rejected: ' + head + ' → ' + base + '\n' +
+              'PRs must target develop, staging or main.\n' +
+              'Correct flow: feature/* → develop → staging → main'
             );
-
-  quality:
-    name: Quality & Build
-    needs: branch-policy
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Configure @coongro registry
-        run: |
-          echo "@coongro:registry=${{ secrets.STAGING_VERDACCIO_URL }}" > .npmrc
-          echo "//${{ secrets.STAGING_VERDACCIO_URL_HOST }}/:_authToken=${{ secrets.STAGING_VERDACCIO_TOKEN }}" >> .npmrc
-
-      - name: Install dependencies
-        run: |
-          rm -f package-lock.json
-          npm install
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build

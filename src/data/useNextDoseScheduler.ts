@@ -17,13 +17,14 @@ const { useState, useCallback } = React;
 const MODULE_ID = '@coongro/vaccination';
 
 function toast(title: string, message: string, type: 'success' | 'info'): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const host = (globalThis as any).coongro?.toast as
-    | {
+  const g = globalThis as {
+    coongro?: {
+      toast?: {
         show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
-      }
-    | undefined;
-  host?.show?.({ title, message, type, moduleId: MODULE_ID });
+      };
+    };
+  };
+  g.coongro?.toast?.show?.({ title, message, type, moduleId: MODULE_ID });
 }
 
 /**

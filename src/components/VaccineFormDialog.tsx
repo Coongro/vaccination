@@ -1,7 +1,5 @@
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
-
-const UI = getHostUI();
 import { formatSpecies } from '@coongro/patients';
+import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 import type { VaccineCatalogItem, CreateVaccineData } from '../hooks/useVaccineCatalog.js';
 import type { LaboratoryRow } from '../schema/laboratory.js';
@@ -10,6 +8,7 @@ import { VACCINE_TYPE_LABELS, ADMINISTRATION_ROUTE_LABELS } from '../types/vacci
 
 import { AddLabDialog } from './AddLabDialog.js';
 
+const UI = getHostUI();
 const React = getHostReact();
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 const h = React.createElement;

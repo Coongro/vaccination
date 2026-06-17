@@ -155,7 +155,7 @@ export function CatalogoView() {
           detailId: d.id,
           name: p.name,
           laboratoryId: d.laboratory_id,
-          species: (d.species) ?? [],
+          species: d.species ?? [],
           vaccineType: d.vaccine_type as VaccineType,
           administrationRoute: d.administration_route as AdministrationRoute,
           minimumAgeMonths: d.minimum_age_months,
@@ -254,10 +254,6 @@ export function CatalogoView() {
   const handleSort = useCallback((key: string, direction: 'asc' | 'desc' | null) => {
     setSortKey(direction ? key : null);
     setSortDir(direction);
-  }, []);
-
-  const toggleChip = useCallback((list: string[], item: string, setter: (v: string[]) => void) => {
-    setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
   }, []);
 
   const handleCreate = useCallback(

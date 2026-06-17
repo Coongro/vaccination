@@ -1,11 +1,10 @@
-import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
-
-const UI = getHostUI();
 import { formatSpecies } from '@coongro/patients';
+import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 
 import type { VaccineCatalogItem } from '../hooks/useVaccineCatalog.js';
 import { VACCINE_TYPE_LABELS, ADMINISTRATION_ROUTE_LABELS } from '../types/vaccination.js';
 
+const UI = getHostUI();
 const React = getHostReact();
 const h = React.createElement;
 

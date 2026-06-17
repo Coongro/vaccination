@@ -130,7 +130,8 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
         if (!patientId) return;
         const appliedDate = ((row.date as string) ?? new Date().toISOString()).slice(0, 10);
         const staffId = (row.staff_id as string | null) ?? null;
-        const weightKg = row.weight_kg != null ? String(row.weight_kg) : null;
+        const weightKg =
+          row.weight_kg !== null && row.weight_kg !== undefined ? String(row.weight_kg) : null;
 
         void (async () => {
           const auto = modeRef.current === 'auto';

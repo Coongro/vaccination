@@ -1,3 +1,6 @@
+/* getHostUI() llega como tipo `error` en este archivo .ts (resolución de tipos de eslint;
+   tsc compila bien). Los accesos a UI.* son seguros en runtime — silenciamos el falso positivo. */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();

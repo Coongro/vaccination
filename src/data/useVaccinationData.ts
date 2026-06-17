@@ -411,6 +411,7 @@ export function useVaccinationData(): VaccinationData {
       // vinculados a la aplicación via metadata.vaccination_applied_id. appointments es
       // opcional — si no está instalado, no rompe (las dosis quedan "por agendar").
       const scheduled = new Map<string, ScheduledNextDose>();
+      /* eslint-disable max-depth -- appointments es opcional; el try/for/if es claro y acotado */
       try {
         const appts = await actions.execute<
           Array<{ id: string; status?: string; metadata?: Record<string, unknown> | null }>
@@ -424,6 +425,7 @@ export function useVaccinationData(): VaccinationData {
       } catch {
         /* appointments no disponible en el tenant */
       }
+      /* eslint-enable max-depth */
 
       setAppliedItems(merged);
       setProducts(productOptions);

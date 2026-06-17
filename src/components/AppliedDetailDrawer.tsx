@@ -81,7 +81,9 @@ export function AppliedDetailDrawer(props: AppliedDetailDrawerProps) {
     ['Profesional', muted(item.vetName === '—' ? null : item.vetName)],
     [
       'Nro. de dosis',
-      item.doseNumber != null ? h('span', { style: mono }, String(item.doseNumber)) : muted(null),
+      item.doseNumber !== null && item.doseNumber !== undefined
+        ? h('span', { style: mono }, String(item.doseNumber))
+        : muted(null),
     ],
     ['Próxima dosis', nextDoseValue],
   ];

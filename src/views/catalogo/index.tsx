@@ -476,7 +476,7 @@ export function CatalogoView() {
         h(
           'div',
           null,
-          h('h1', { className: 'text-2xl font-bold text-cg-text' }, 'Catálogo'),
+          h('h1', { className: 'text-2xl font-bold text-cg-text' }, 'Vacunas'),
           h(
             'p',
             { className: 'text-sm text-cg-text-muted mt-1' },

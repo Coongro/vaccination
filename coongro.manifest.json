@@ -18,7 +18,7 @@
         "color": "#10B981"
       },
       {
-        "path": "Vacunación/Catálogo",
+        "path": "Vacunación/Vacunas",
         "order": 1,
         "viewId": "vaccination.catalogo.open"
       },
@@ -41,7 +41,7 @@
     "views": [
       {
         "id": "vaccination.catalogo.open",
-        "title": "Catálogo",
+        "title": "Vacunas",
         "component": "./dist/views/catalogo/index.js",
         "export": "CatalogoView"
       },

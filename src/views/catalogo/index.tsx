@@ -2,7 +2,6 @@ import { usePatientsSettings, SPECIES_LABELS, formatSpecies } from '@coongro/pat
 import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
-import { LaboratoryDrawer } from '../../components/LaboratoryDrawer.js';
 import { ProductDetailDrawer } from '../../components/ProductDetailDrawer.js';
 import { VaccineFormDialog } from '../../components/VaccineFormDialog.js';
 import { VACCINE_TYPE_LABELS, ADMINISTRATION_ROUTE_LABELS } from '../../types/vaccination.js';
@@ -120,7 +119,6 @@ export function CatalogoView() {
   const [showForm, setShowForm] = useState(false);
   const [editingVaccine, setEditingVaccine] = useState<CatalogItem | null>(null);
   const [detailVaccine, setDetailVaccine] = useState<CatalogItem | null>(null);
-  const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [estadoFilter, setEstadoFilter] = useState<EstadoFilter>('activos');
   const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -140,7 +138,7 @@ export function CatalogoView() {
       const [products, details, laboratories] = await Promise.all([
         actions.execute<Product[]>('products.items.list'),
         actions.execute<VaccineDetail[]>('vaccination.catalog.list'),
-        actions.execute<Lab[]>('vaccination.laboratories.list'),
+        actions.execute<Lab[]>('vademecum.laboratories.list'),
       ]);
 
       const detailByProductId = new Map<string, VaccineDetail>();
@@ -186,14 +184,6 @@ export function CatalogoView() {
     for (const lab of labs) map.set(lab.id, lab.name);
     return map;
   }, [labs]);
-
-  // Productos del catálogo por laboratorio — alimenta el guard de borrado del drawer
-  // (un laboratorio en uso no se puede eliminar, solo desactivar).
-  const productCountByLab = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const item of items) counts[item.laboratoryId] = (counts[item.laboratoryId] ?? 0) + 1;
-    return counts;
-  }, [items]);
 
   const filteredItems = useMemo(() => {
     let result = items;
@@ -334,39 +324,6 @@ export function CatalogoView() {
       await loadData();
     },
     [detailVaccine, loadData]
-  );
-
-  const handleCreateLab = useCallback(
-    async (data: { name: string }): Promise<Lab> => {
-      const result = await actions.execute<Lab[]>('vaccination.laboratories.create', {
-        data: { id: uuid(), ...data },
-      });
-      await loadData();
-      return result[0];
-    },
-    [loadData]
-  );
-
-  const handleUpdateLab = useCallback(
-    async (id: string, data: Partial<Lab>): Promise<Lab> => {
-      const result = await actions.execute<Lab[]>('vaccination.laboratories.update', { id, data });
-      await loadData();
-      return result[0];
-    },
-    [loadData]
-  );
-
-  const handleRemoveLab = useCallback(
-    async (id: string): Promise<void> => {
-      const lab = labs.find((l) => l.id === id);
-      await actions.execute('vaccination.laboratories.softDelete', { id });
-      toast?.success(
-        'Laboratorio eliminado',
-        lab ? `"${lab.name}" eliminado` : 'Laboratorio eliminado'
-      );
-      await loadData();
-    },
-    [labs, loadData]
   );
 
   const columns = useMemo(
@@ -531,12 +488,6 @@ export function CatalogoView() {
           { className: 'flex gap-2 shrink-0' },
           h(
             UI.Button,
-            { variant: 'outline', onClick: () => setShowLabDrawer(true) } as any,
-            h(UI.DynamicIcon, { icon: 'Archive', size: 14 } as any),
-            ' Gestionar laboratorios'
-          ),
-          h(
-            UI.Button,
             {
               variant: 'brand',
               onClick: () => {
@@ -634,26 +585,10 @@ export function CatalogoView() {
         setShowForm(false);
         setEditingVaccine(null);
       },
-      laboratories: labs,
       availableSpecies,
       defaultSpecies: patientsSettings.defaultSpecies,
       vaccine: editingVaccine,
       onSubmit: editingVaccine ? handleUpdate : handleCreate,
-      onCreateLaboratory: async (name: string) => {
-        const lab = await handleCreateLab({ name });
-        toast?.success('Laboratorio creado', `"${name}" agregado`);
-        return lab;
-      },
-    }),
-
-    h(LaboratoryDrawer, {
-      open: showLabDrawer,
-      onClose: () => setShowLabDrawer(false),
-      laboratories: labs,
-      productCounts: productCountByLab,
-      onCreate: handleCreateLab,
-      onUpdate: handleUpdateLab,
-      onRemove: handleRemoveLab,
     })
   );
 }

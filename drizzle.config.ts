@@ -1,7 +1,7 @@
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: ['./src/schema/laboratory.ts', './src/schema/vaccine-detail.ts', './src/schema/applied-vaccination.ts'],
+  schema: ['./src/schema/vaccine-detail.ts', './src/schema/applied-vaccination.ts'],
   out: './drizzle',
   dialect: 'postgresql',
   verbose: true,

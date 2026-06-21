@@ -66,11 +66,6 @@
     ],
     "repositories": [
       {
-        "module": "./dist/repositories/laboratory.repository.js",
-        "export": "LaboratoryRepository",
-        "prefix": "vaccination.laboratories"
-      },
-      {
         "module": "./dist/repositories/vaccine-detail.repository.js",
         "export": "VaccineDetailRepository",
         "prefix": "vaccination.catalog"

@@ -41,7 +41,8 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pet = props.pet as any;
   const petName = pet?.name as string | undefined;
-  const petWeight = pet?.weight_kg != null ? String(pet.weight_kg) : undefined;
+  const petWeight =
+    pet?.weight_kg !== undefined && pet?.weight_kg !== null ? String(pet.weight_kg) : undefined;
   const ownerContactId = (pet?.owner_id as string | undefined) ?? null;
 
   const { appliedItems, products, lotesByProduct, loading, reload } = useVaccinationData();

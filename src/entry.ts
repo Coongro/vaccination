@@ -1,9 +1,9 @@
 import type { ModuleActivationContext, ModuleDatabaseAPI, Logger } from '@coongro/plugin-sdk';
 import { categoryTable, productTable } from '@coongro/products/server';
+import { LaboratoryRepository } from '@coongro/vademecum/server';
 import { eq } from 'drizzle-orm';
 
 import { VACCINE_CATEGORY_SLUG, LABORATORIES, VACCINE_PRODUCTS } from './constants/seed-data.js';
-import { laboratoryTable } from './schema/laboratory.js';
 import { vaccineDetailTable } from './schema/vaccine-detail.js';
 
 export async function activate(context: ModuleActivationContext): Promise<void> {
@@ -51,16 +51,15 @@ async function seedCategory(db: ModuleDatabaseAPI): Promise<string> {
 }
 
 async function seedLaboratories(db: ModuleDatabaseAPI): Promise<Map<string, string>> {
+  // Los laboratorios viven en el maestro compartido (vademecum), no en una tabla
+  // propia de vacunación (COONG-219). Se hace upsert por nombre para no duplicar
+  // los que ya cargó Farmacia u otro seed, y se reusa su id para los productos.
+  const labRepo = new LaboratoryRepository(db);
   const labMap = new Map<string, string>();
-  const labValues = LABORATORIES.map((lab) => {
-    const id = crypto.randomUUID();
-    labMap.set(lab.name, id);
-    return { id, name: lab.name, is_active: true };
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  await db.ormQuery((tx) => tx.insert(laboratoryTable).values(labValues as any));
-
+  for (const lab of LABORATORIES) {
+    const row = await labRepo.ensureByName({ name: lab.name });
+    labMap.set(lab.name, row.id);
+  }
   return labMap;
 }
 

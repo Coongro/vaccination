@@ -1,7 +1,7 @@
 import type { ModuleActivationContext, ModuleDatabaseAPI, Logger } from '@coongro/plugin-sdk';
 import { categoryTable, productTable } from '@coongro/products/server';
 import { LaboratoryRepository } from '@coongro/vademecum/server';
-import { eq } from 'drizzle-orm';
+import { eq, isNull } from 'drizzle-orm';
 
 import { VACCINE_CATEGORY_SLUG, LABORATORIES, VACCINE_PRODUCTS } from './constants/seed-data.js';
 import { vaccineDetailTable } from './schema/vaccine-detail.js';
@@ -19,6 +19,76 @@ export async function activate(context: ModuleActivationContext): Promise<void> 
   } catch (err) {
     api.logger.error('Failed to seed vaccination data', err);
   }
+
+  // Recuperación del laboratorio para vacunas que quedaron huérfanas (COONG-219):
+  // al migrar al maestro compartido se dropeó la tabla vieja, así que los
+  // `vaccine_details` seedeados antes quedaron con un `laboratory_id` que ya no
+  // existe en ningún maestro. Se re-vincula recuperando el nombre del lab desde
+  // los datos del seed (producto → laboratorio) y materializándolo en el maestro.
+  try {
+    await relinkOrphanedLaboratories(api.database, api.logger);
+  } catch (err) {
+    api.logger.error('Failed to relink vaccination laboratories', err);
+  }
+}
+
+interface ProductNameRow {
+  id: string;
+  name: string;
+}
+interface VaccineDetailLabRow {
+  id: string;
+  product_id: string;
+  laboratory_id: string | null;
+}
+
+async function relinkOrphanedLaboratories(db: ModuleDatabaseAPI, logger: Logger): Promise<void> {
+  const labRepo = new LaboratoryRepository(db);
+  const masterIds = new Set((await labRepo.list()).map((l) => l.id));
+
+  const details = (await db.ormQuery((tx) =>
+    tx
+      .select({
+        id: vaccineDetailTable.id,
+        product_id: vaccineDetailTable.product_id,
+        laboratory_id: vaccineDetailTable.laboratory_id,
+      })
+      .from(vaccineDetailTable)
+      .where(isNull(vaccineDetailTable.deleted_at))
+  )) as VaccineDetailLabRow[];
+
+  const orphans = details.filter((d) => !d.laboratory_id || !masterIds.has(d.laboratory_id));
+  if (orphans.length === 0) return;
+
+  // Nombre del producto (para cruzar contra el seed) + lab por nombre de vacuna.
+  const products = (await db.ormQuery((tx) =>
+    tx.select({ id: productTable.id, name: productTable.name }).from(productTable)
+  )) as ProductNameRow[];
+  const productNameById = new Map(products.map((p) => [p.id, p.name]));
+  const labByVaccineName = new Map(VACCINE_PRODUCTS.map((v) => [v.name, v.laboratory]));
+
+  const idByLabName = new Map<string, string>();
+  let relinked = 0;
+  for (const d of orphans) {
+    const productName = productNameById.get(d.product_id);
+    const labName = productName ? labByVaccineName.get(productName) : undefined;
+    if (!labName) continue;
+    let labId = idByLabName.get(labName);
+    if (!labId) {
+      const row = await labRepo.ensureByName({ name: labName });
+      labId = row.id;
+      idByLabName.set(labName, labId);
+    }
+    await db.ormQuery((tx) =>
+      tx
+        .update(vaccineDetailTable)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        .set({ laboratory_id: labId } as any)
+        .where(eq(vaccineDetailTable.id, d.id))
+    );
+    relinked += 1;
+  }
+  if (relinked > 0) logger.info(`vaccination: relinked ${relinked} vaccine laboratories to master`);
 }
 
 async function isAlreadySeeded(db: ModuleDatabaseAPI): Promise<boolean> {

@@ -1,5 +1,5 @@
 import { formatSpecies } from '@coongro/patients';
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
+import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 import { ApplyVaccineDialog } from '../../components/ApplyVaccineDialog.js';
@@ -42,7 +42,7 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
   const pet = props.pet as any;
   const petName = pet?.name as string | undefined;
   const petWeight =
-    pet?.weight_kg !== undefined && pet?.weight_kg !== null ? String(pet.weight_kg) : undefined;
+    pet?.weight_kg !== null && pet?.weight_kg !== undefined ? String(pet.weight_kg) : undefined;
   const ownerContactId = (pet?.owner_id as string | undefined) ?? null;
 
   const { appliedItems, products, lotesByProduct, loading, reload } = useVaccinationData();
@@ -148,6 +148,15 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
     win.document.close();
   }, [rows, petName]);
 
+  // Abre "Aplicadas" con el nombre de la mascota (buscador) + su dueño (filtro
+  // Dueño). Juntos identifican a la mascota aunque haya nombres repetidos.
+  const openCarnet = useCallback(() => {
+    void views.open('vaccination.aplicadas.open', {
+      patientName: petName,
+      ownerContactId,
+    });
+  }, [petName, ownerContactId]);
+
   if (!petId) return null;
 
   const COL = 'grid grid-cols-[110px_1.4fr_1fr_80px_1fr] gap-3 items-center';
@@ -204,7 +213,7 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
             h(
               'div',
               {
-                className: `${COL} px-4 py-2 bg-cg-bg-secondary text-[11px] font-bold uppercase tracking-wide text-cg-text-muted`,
+                className: `${COL} px-4 py-2.5 border-b border-cg-border text-[11px] font-bold uppercase tracking-wide text-cg-text-muted`,
               },
               h('span', null, 'Fecha'),
               h('span', null, 'Producto'),
@@ -217,7 +226,11 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
                 'div',
                 {
                   key: r.id,
-                  className: `${COL} px-4 py-2.5 text-[13px] text-cg-text ${
+                  role: 'button',
+                  tabIndex: 0,
+                  title: 'Ver aplicaciones de este paciente',
+                  onClick: openCarnet,
+                  className: `${COL} px-4 py-2.5 text-[13px] text-cg-text cursor-pointer transition-colors hover:bg-cg-bg-hover ${
                     i < rows.length - 1 ? 'border-b border-cg-border' : ''
                   }`,
                 },

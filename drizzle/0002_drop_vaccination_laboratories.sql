@@ -1,0 +1,1 @@
+DROP TABLE "module_vaccination_laboratories" CASCADE;

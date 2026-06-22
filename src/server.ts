@@ -4,8 +4,6 @@
  * Schema tables y repositories (dependen de drizzle-orm).
  * NO importar desde el browser — usar '@coongro/vaccination' para hooks/componentes.
  */
-export * from './schema/laboratory.js';
-export { LaboratoryRepository } from './repositories/laboratory.repository.js';
 export * from './schema/vaccine-detail.js';
 export { VaccineDetailRepository } from './repositories/vaccine-detail.repository.js';
 export * from './schema/applied-vaccination.js';

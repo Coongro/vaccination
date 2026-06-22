@@ -318,7 +318,7 @@ export function useVaccinationData(): VaccinationData {
           actions.execute<Variant[]>('products.variants.list'),
           actions.execute<StaffMember[]>('staff.members.list'),
           actions.execute<VaccineDetail[]>('vaccination.catalog.list'),
-          actions.execute<Lab[]>('vaccination.laboratories.list'),
+          actions.execute<Lab[]>('vademecum.laboratories.list'),
         ]);
 
       const petById = new Map<string, Pet>();

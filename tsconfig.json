@@ -51,6 +51,12 @@
       ],
       "@coongro/datetime": [
         "../../packages/datetime/dist/index.d.ts"
+      ],
+      "@coongro/vademecum": [
+        "../vademecum/dist/index.d.ts"
+      ],
+      "@coongro/vademecum/server": [
+        "../vademecum/dist/server.d.ts"
       ]
     }
   },

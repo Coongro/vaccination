@@ -105,7 +105,7 @@ export function LotesView() {
       const [details, productList, labs, variants] = await Promise.all([
         actions.execute<VaccineDetail[]>('vaccination.catalog.list'),
         actions.execute<Product[]>('products.items.list'),
-        actions.execute<Lab[]>('vaccination.laboratories.list'),
+        actions.execute<Lab[]>('vademecum.laboratories.list'),
         actions.execute<Variant[]>('products.variants.list'),
       ]);
 

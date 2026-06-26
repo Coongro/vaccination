@@ -4,7 +4,7 @@ import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 const UI = getHostUI();
 import { ApplyVaccineDialog } from '../../components/ApplyVaccineDialog.js';
 import type { ApplyFormData } from '../../components/ApplyVaccineDialog.js';
-import { formatDate } from '../../components/lote-status.js';
+import { formatDate } from '../../components/date-utils.js';
 import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
 import { chargeAppliedVaccine } from '../../data/billing.js';
 import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';

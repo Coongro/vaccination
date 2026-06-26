@@ -5,7 +5,12 @@ export const appliedVaccinationTable = pgTable('module_vaccination_applied_vacci
   id: uuid('id').primaryKey().notNull(),
   patient_id: uuid('patient_id').notNull(),
   product_id: uuid('product_id').notNull(),
-  variant_id: uuid('variant_id'),
+  /**
+   * Lote aplicado en products.batches (module_products_batches). Antes era
+   * variant_id (lote = variante de products); COONG-220 unificó los lotes en el
+   * motor genérico products.batches. Nullable: una aplicación puede no registrar lote.
+   */
+  batch_id: uuid('batch_id'),
   applied_date: text('applied_date').notNull(),
   weight_kg: numeric('weight_kg'),
   staff_id: uuid('staff_id'),

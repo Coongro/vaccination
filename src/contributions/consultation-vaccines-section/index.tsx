@@ -1,8 +1,8 @@
 import { useTenantTimezone } from '@coongro/calendar';
 import { getHostReact, getHostUI, events, actions } from '@coongro/plugin-sdk';
+import { BatchPicker } from '@coongro/products';
 
 const UI = getHostUI();
-import { formatDate } from '../../components/lote-status.js';
 import { chargeAppliedVaccine } from '../../data/billing.js';
 import {
   useVaccinationData,
@@ -41,7 +41,7 @@ interface PendingVaccine {
   key: string;
   productId: string;
   productName: string;
-  variantId: string;
+  batchId: string;
   lote: string;
   expiresAt: string;
   intervalDays: number | null;
@@ -61,7 +61,7 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
   const tz = useTenantTimezone();
 
   const [productId, setProductId] = useState('');
-  const [variantId, setVariantId] = useState('');
+  const [batchId, setBatchId] = useState('');
   const [pending, setPending] = useState<PendingVaccine[]>([]);
   const pendingRef = useRef<PendingVaccine[]>([]);
   // El callback del evento vive fuera del ciclo de render; leemos mode/tz/hora/duración por ref.
@@ -96,17 +96,17 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
   );
 
   const addVaccine = useCallback(() => {
-    if (!productId || !variantId) return;
+    if (!productId || !batchId) return;
     const product = products.find((p) => p.productId === productId);
-    const lote = availableLotes.find((l) => l.variantId === variantId);
+    const lote = availableLotes.find((l) => l.batchId === batchId);
     if (!product || !lote) return;
     setPending((prev) => [
       ...prev,
       {
-        key: `${productId}|${variantId}|${prev.length}`,
+        key: `${productId}|${batchId}|${prev.length}`,
         productId,
         productName: product.name,
-        variantId,
+        batchId,
         lote: lote.lote,
         expiresAt: lote.expiresAt,
         intervalDays: product.scheduleIntervalDays,
@@ -114,8 +114,8 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
       },
     ]);
     setProductId('');
-    setVariantId('');
-  }, [productId, variantId, products, availableLotes]);
+    setBatchId('');
+  }, [productId, batchId, products, availableLotes]);
 
   // Al guardarse la consulta, registrar cada vacuna pendiente.
   useEffect(() => {
@@ -155,7 +155,7 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
             const appliedId = await applyVaccine({
               patientId,
               productId: v.productId,
-              variantId: v.variantId,
+              batchId: v.batchId,
               appliedDate,
               weightKg,
               staffId,
@@ -230,7 +230,7 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
             value: productId,
             onValueChange: (v: string) => {
               setProductId(v);
-              setVariantId('');
+              setBatchId('');
             },
             placeholder: 'Vacuna del catálogo…',
             debounceMs: 0,
@@ -243,30 +243,26 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
       h(
         'div',
         { className: 'flex-1 min-w-[200px]' },
-        h(
-          UI.Select,
-          {
-            value: variantId,
-            onValueChange: (v: string) => setVariantId(v),
-            placeholder: 'Lote…',
-            disabled: !productId,
-            debounceMs: 0,
-          } as any,
-          ...availableLotes.map((l) =>
-            h(
-              UI.SelectItem,
-              { key: l.variantId, value: l.variantId } as any,
-              `${l.lote} · vence ${formatDate(l.expiresAt)} · ${l.remaining} disp.`
-            )
-          )
-        )
+        h(BatchPicker, {
+          batches: availableLotes.map((l) => ({
+            id: l.batchId,
+            batchNumber: l.lote,
+            expirationDate: l.expiresAt,
+            quantity: l.remaining,
+          })),
+          value: batchId,
+          onChange: (v: string) => setBatchId(v),
+          placeholder: 'Lote…',
+          disabled: !productId,
+          size: 'sm',
+        })
       ),
       h(
         UI.Button,
         {
           variant: 'outline',
           size: 'sm',
-          disabled: !productId || !variantId,
+          disabled: !productId || !batchId,
           onClick: addVaccine,
         } as any,
         h(UI.DynamicIcon, { icon: 'Plus', size: 13 } as any),

@@ -3,7 +3,7 @@ import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 import { AppliedDetailDrawer } from '../../components/AppliedDetailDrawer.js';
-import { formatDate } from '../../components/lote-status.js';
+import { formatDate } from '../../components/date-utils.js';
 import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
 import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
 import { useVaccinationData } from '../../data/useVaccinationData.js';

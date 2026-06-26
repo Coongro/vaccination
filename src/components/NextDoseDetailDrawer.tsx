@@ -5,7 +5,7 @@ const UI = getHostUI();
 import type { AppliedItem } from '../data/useVaccinationData.js';
 import type { UpcomingRow } from '../views/proximas-dosis/index.js';
 
-import { formatDate } from './lote-status.js';
+import { formatDate } from './date-utils.js';
 
 const React = getHostReact();
 const h = React.createElement;

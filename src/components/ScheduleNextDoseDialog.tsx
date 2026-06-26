@@ -10,7 +10,7 @@ import {
 } from '../data/useVaccinationData.js';
 import { useVaccinationSettings } from '../data/useVaccinationSettings.js';
 
-import { formatDate } from './lote-status.js';
+import { formatDate } from './date-utils.js';
 
 const React = getHostReact();
 const { useState, useEffect, useCallback } = React;

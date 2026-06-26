@@ -1,10 +1,11 @@
 import { DatePicker } from '@coongro/calendar';
 import { PetPicker } from '@coongro/patients';
 import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
+import { BatchPicker } from '@coongro/products';
 import { StaffPicker } from '@coongro/staff';
 
 const UI = getHostUI();
-import { formatDate, daysUntil } from './lote-status.js';
+import { daysUntil } from './date-utils.js';
 
 const React = getHostReact();
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
@@ -21,9 +22,9 @@ export interface ApplyProductOption {
   salePrice: string | null;
 }
 
-/** Lote disponible de un producto (variante con stock). */
+/** Lote disponible de un producto (fila de products.batches con stock). */
 export interface ApplyLoteOption {
-  variantId: string;
+  batchId: string;
   lote: string;
   expiresAt: string;
   remaining: number;
@@ -32,7 +33,7 @@ export interface ApplyLoteOption {
 export interface ApplyFormData {
   patientId: string;
   productId: string;
-  variantId: string;
+  batchId: string;
   appliedDate: string;
   weightKg: string | null;
   staffId: string | null;
@@ -58,7 +59,7 @@ interface ApplyVaccineDialogProps {
 interface FormState {
   patientId: string;
   productId: string;
-  variantId: string;
+  batchId: string;
   appliedDate: string;
   weightKg: string;
   staffId: string;
@@ -88,7 +89,7 @@ function initialForm(): FormState {
   return {
     patientId: '',
     productId: '',
-    variantId: '',
+    batchId: '',
     appliedDate: todayKey(),
     weightKg: '',
     staffId: '',
@@ -115,7 +116,7 @@ function validate(form: FormState): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!form.patientId) errors.patientId = 'Elegí el paciente.';
   if (!form.productId) errors.productId = 'Elegí un producto del catálogo.';
-  if (!form.variantId) errors.variantId = 'Elegí el lote a aplicar.';
+  if (!form.batchId) errors.batchId = 'Elegí el lote a aplicar.';
   if (!form.appliedDate) errors.appliedDate = 'Ingresá la fecha de aplicación.';
   if (!form.staffId) errors.staffId = 'Elegí el profesional que aplica.';
   return errors;
@@ -185,8 +186,8 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
   );
 
   const selectedLote = useMemo(
-    () => availableLotes.find((l) => l.variantId === form.variantId) ?? null,
-    [availableLotes, form.variantId]
+    () => availableLotes.find((l) => l.batchId === form.batchId) ?? null,
+    [availableLotes, form.batchId]
   );
 
   const loteExpired = useMemo(() => {
@@ -209,7 +210,7 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
 
   // Al cambiar de producto, el lote elegido deja de ser válido.
   useEffect(() => {
-    setForm((prev: FormState) => ({ ...prev, variantId: '' }));
+    setForm((prev: FormState) => ({ ...prev, batchId: '' }));
   }, [form.productId]);
 
   const handleSubmit = useCallback(async () => {
@@ -219,7 +220,7 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
       await onSubmit({
         patientId: form.patientId,
         productId: form.productId,
-        variantId: form.variantId,
+        batchId: form.batchId,
         appliedDate: form.appliedDate,
         weightKg: form.weightKg.trim() || null,
         staffId: form.staffId || null,
@@ -330,33 +331,27 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
             {
               label: 'Lote',
               required: true,
-              error: touched.has('variantId') && errors.variantId,
+              error: touched.has('batchId') && errors.batchId,
               hint: !form.productId
                 ? 'Elegí primero un producto.'
                 : availableLotes.length === 0
                   ? 'Este producto no tiene lotes con stock. Cargá uno en Lotes.'
                   : null,
             },
-            h(
-              UI.Select,
-              {
-                value: form.variantId,
-                onValueChange: (v: string) => {
-                  setField('variantId', v);
-                  touch('variantId');
-                },
-                placeholder: 'Elegí un lote…',
-                disabled: !form.productId || availableLotes.length === 0,
-                debounceMs: 0,
-              } as any,
-              ...availableLotes.map((l) =>
-                h(
-                  UI.SelectItem,
-                  { key: l.variantId, value: l.variantId } as any,
-                  `${l.lote} · vence ${formatDate(l.expiresAt)} · ${l.remaining} disp.`
-                )
-              )
-            )
+            h(BatchPicker, {
+              batches: availableLotes.map((l) => ({
+                id: l.batchId,
+                batchNumber: l.lote,
+                expirationDate: l.expiresAt,
+                quantity: l.remaining,
+              })),
+              value: form.batchId,
+              onChange: (v: string) => {
+                setField('batchId', v);
+                touch('batchId');
+              },
+              disabled: !form.productId || availableLotes.length === 0,
+            })
           ),
           loteExpired &&
             h(

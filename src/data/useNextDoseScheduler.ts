@@ -1,7 +1,7 @@
 import { useTenantTimezone } from '@coongro/calendar';
 import { getHostReact, views } from '@coongro/plugin-sdk';
 
-import { formatDate } from '../components/lote-status.js';
+import { formatDate } from '../components/date-utils.js';
 import type { ScheduleInput } from '../components/ScheduleNextDoseDialog.js';
 
 import {

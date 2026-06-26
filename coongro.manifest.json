@@ -23,11 +23,6 @@
         "viewId": "vaccination.catalogo.open"
       },
       {
-        "path": "Vacunación/Lotes",
-        "order": 2,
-        "viewId": "vaccination.lotes.open"
-      },
-      {
         "path": "Vacunación/Aplicadas",
         "order": 3,
         "viewId": "vaccination.aplicadas.open"
@@ -44,12 +39,6 @@
         "title": "Vacunas",
         "component": "./dist/views/catalogo/index.js",
         "export": "CatalogoView"
-      },
-      {
-        "id": "vaccination.lotes.open",
-        "title": "Lotes",
-        "component": "./dist/views/lotes/index.js",
-        "export": "LotesView"
       },
       {
         "id": "vaccination.aplicadas.open",

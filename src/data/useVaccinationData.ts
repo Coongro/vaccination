@@ -10,8 +10,6 @@ import type {
 const React = getHostReact();
 const { useState, useEffect, useCallback, useRef } = React;
 
-const BATCH_KIND = 'vaccination-batch';
-
 function uuid(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -26,7 +24,7 @@ function uuid(): string {
 
 /**
  * Registra una aplicación de vacuna: crea el `applied_vaccination` y, si hay lote,
- * descuenta una dosis con un movimiento de stock 'out' (actualiza stock_current).
+ * descuenta una dosis del lote en `products.batches` (motor unificado, COONG-220).
  * Compartido por el carnet de la ficha y cualquier otro punto de alta.
  */
 export async function applyVaccine(data: ApplyFormData): Promise<string> {
@@ -36,7 +34,7 @@ export async function applyVaccine(data: ApplyFormData): Promise<string> {
       id: appliedId,
       patient_id: data.patientId,
       product_id: data.productId,
-      variant_id: data.variantId,
+      batch_id: data.batchId,
       applied_date: data.appliedDate,
       weight_kg: data.weightKg,
       staff_id: data.staffId,
@@ -45,16 +43,16 @@ export async function applyVaccine(data: ApplyFormData): Promise<string> {
       notes: data.notes,
     },
   });
-  if (data.variantId) {
-    await actions.execute('products.stock.create', {
-      data: {
-        id: uuid(),
-        product_id: data.productId,
-        variant_id: data.variantId,
-        type: 'out',
-        quantity: '-1',
-        reference_type: 'vaccination_application',
-      },
+  if (data.batchId) {
+    // Descuento vía el motor de lotes (products): resta 1 dosis del lote elegido,
+    // marca agotado al llegar a 0 y registra el movimiento con trazabilidad
+    // (lote → esta aplicación). Mismo motor que usa farmacia.
+    await actions.execute('products.batches.consume', {
+      productId: data.productId,
+      quantity: 1,
+      batchId: data.batchId,
+      referenceType: 'vaccination_application',
+      referenceId: appliedId,
     });
   }
   return appliedId;
@@ -192,7 +190,7 @@ export interface AppliedItem {
   tutor: string;
   productId: string;
   productName: string;
-  variantId: string | null;
+  batchId: string | null;
   lote: string;
   staffId: string;
   vetName: string;
@@ -222,7 +220,7 @@ interface AppliedRecord {
   id: string;
   patient_id: string;
   product_id: string;
-  variant_id: string | null;
+  batch_id: string | null;
   applied_date: string;
   weight_kg: string | null;
   staff_id: string | null;
@@ -257,13 +255,14 @@ interface VaccineDetail {
   laboratory_id: string;
   schedule_interval_days: number | null;
 }
-interface Variant {
+/** Lote de products.batches (module_products_batches), motor unificado (COONG-220). */
+interface Batch {
   id: string;
   product_id: string;
-  sku: string | null;
-  stock_current: string | null;
-  is_active: boolean;
-  attributes: Record<string, unknown> | null;
+  batch_number: string;
+  expiration_date: string | null;
+  quantity: string | null;
+  status: string;
 }
 interface StaffMember {
   id: string;
@@ -309,13 +308,13 @@ export function useVaccinationData(): VaccinationData {
     setLoading(true);
     setError(null);
     try {
-      const [applied, pets, contacts, productList, variants, staff, details, labs] =
+      const [applied, pets, contacts, productList, batches, staff, details, labs] =
         await Promise.all([
           actions.execute<AppliedRecord[]>('vaccination.applied.list'),
           actions.execute<Pet[]>('patients.pets.list'),
           actions.execute<Contact[]>('contacts.list'),
           actions.execute<Product[]>('products.items.list'),
-          actions.execute<Variant[]>('products.variants.list'),
+          actions.execute<Batch[]>('products.batches.list'),
           actions.execute<StaffMember[]>('staff.members.list'),
           actions.execute<VaccineDetail[]>('vaccination.catalog.list'),
           actions.execute<Lab[]>('vademecum.laboratories.list'),
@@ -342,11 +341,8 @@ export function useVaccinationData(): VaccinationData {
       // El nombre del profesional vive en contacts (staff guarda contact_id).
       const staffNameById = new Map<string, string>();
       for (const s of staff) staffNameById.set(s.id, contactNameById.get(s.contact_id) ?? '—');
-      const loteByVariantId = new Map<string, string>();
-      for (const v of variants) {
-        const attrs = v.attributes ?? {};
-        loteByVariantId.set(v.id, (attrs.lote as string) ?? v.sku ?? '');
-      }
+      const loteByBatchId = new Map<string, string>();
+      for (const b of batches) loteByBatchId.set(b.id, b.batch_number);
 
       const detailByProductId = new Map<string, VaccineDetail>();
       for (const d of details) detailByProductId.set(d.product_id, d);
@@ -365,18 +361,18 @@ export function useVaccinationData(): VaccinationData {
       }
       productOptions.sort((a, b) => a.name.localeCompare(b.name));
 
+      // Lotes con stock para elegir al aplicar: del motor unificado products.batches,
+      // solo los de productos del catálogo de vacunas, activos y con dosis.
       const lotesMap: Record<string, ApplyLoteOption[]> = {};
-      for (const v of variants) {
-        const attrs = v.attributes ?? {};
-        if (attrs.kind !== BATCH_KIND) continue;
-        if (!v.is_active) continue;
-        if (!detailByProductId.has(v.product_id)) continue;
-        const remaining = Number(v.stock_current ?? 0);
+      for (const b of batches) {
+        if (b.status !== 'active') continue;
+        if (!detailByProductId.has(b.product_id)) continue;
+        const remaining = Number(b.quantity ?? 0);
         if (remaining <= 0) continue;
-        (lotesMap[v.product_id] ??= []).push({
-          variantId: v.id,
-          lote: (attrs.lote as string) ?? v.sku ?? '',
-          expiresAt: (attrs.expires_at as string) ?? '',
+        (lotesMap[b.product_id] ??= []).push({
+          batchId: b.id,
+          lote: b.batch_number,
+          expiresAt: b.expiration_date ? b.expiration_date.slice(0, 10) : '',
           remaining,
         });
       }
@@ -392,8 +388,8 @@ export function useVaccinationData(): VaccinationData {
           tutor: pet ? (contactNameById.get(pet.owner_id) ?? '—') : '—',
           productId: a.product_id,
           productName: productNameById.get(a.product_id) ?? '—',
-          variantId: a.variant_id,
-          lote: a.variant_id ? (loteByVariantId.get(a.variant_id) ?? '—') : '—',
+          batchId: a.batch_id,
+          lote: a.batch_id ? (loteByBatchId.get(a.batch_id) ?? '—') : '—',
           staffId: a.staff_id ?? '',
           vetName: a.staff_id ? (staffNameById.get(a.staff_id) ?? '—') : '—',
           weightKg: a.weight_kg,

@@ -22,6 +22,13 @@
       "when": 1782027145941,
       "tag": "0002_drop_vaccination_laboratories",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783000000000,
+      "tag": "0003_unify_batch_id",
+      "breakpoints": true
     }
   ]
 }

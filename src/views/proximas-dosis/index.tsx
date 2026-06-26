@@ -2,7 +2,7 @@ import { formatSpecies } from '@coongro/patients';
 import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
-import { formatDate, daysUntil } from '../../components/lote-status.js';
+import { formatDate, daysUntil } from '../../components/date-utils.js';
 import { NextDoseDetailDrawer } from '../../components/NextDoseDetailDrawer.js';
 import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
 import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';

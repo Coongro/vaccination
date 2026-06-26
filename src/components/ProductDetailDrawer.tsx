@@ -1,5 +1,6 @@
 import { formatSpecies } from '@coongro/patients';
 import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
+import { StockPanel } from '@coongro/products';
 
 import type { VaccineCatalogItem } from '../hooks/useVaccineCatalog.js';
 import { VACCINE_TYPE_LABELS, ADMINISTRATION_ROUTE_LABELS } from '../types/vaccination.js';
@@ -130,6 +131,18 @@ export function ProductDetailDrawer(props: ProductDetailDrawerProps) {
             h('span', { style: { color: 'var(--cg-text-muted)' } }, label),
             h('span', { style: { color: 'var(--cg-text)', textAlign: 'right' } }, value)
           )
+        ),
+
+        // Stock / Lotes de esta vacuna (read-only; la gestión vive en Lotes y stock).
+        h(
+          'div',
+          { style: { marginTop: '20px' } },
+          h(StockPanel, {
+            productId: vaccine.productId,
+            unit: 'dosis',
+            onGestionar: () =>
+              views.open('kit-veterinary.lotes.open', { productId: vaccine.productId }),
+          } as any)
         )
       ),
 

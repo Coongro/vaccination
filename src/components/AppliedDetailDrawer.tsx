@@ -3,7 +3,7 @@ import { getHostReact, getHostUI, views } from '@coongro/plugin-sdk';
 const UI = getHostUI();
 import type { AppliedItem, ScheduledNextDose } from '../data/useVaccinationData.js';
 
-import { formatDate } from './lote-status.js';
+import { formatDate } from './date-utils.js';
 
 const React = getHostReact();
 const h = React.createElement;

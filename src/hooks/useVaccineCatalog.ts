@@ -9,6 +9,7 @@ interface ProductRow {
   id: string;
   name: string;
   sale_price: string | null;
+  purchase_price: string | null;
   is_active: boolean;
   category_id: string | null;
   tags: string[] | null;
@@ -27,6 +28,8 @@ export interface VaccineCatalogItem {
   scheduleDoses: number | null;
   scheduleIntervalDays: number | null;
   suggestedPrice: string | null;
+  /** Costo de compra del producto (promedio ponderado, autorellenado al comprar — COONG-223). */
+  purchaseCost: string | null;
   isActive: boolean;
   notes: string | null;
 }
@@ -120,6 +123,7 @@ export function useVaccineCatalog(): UseVaccineCatalogResult {
           scheduleDoses: detail.schedule_doses,
           scheduleIntervalDays: detail.schedule_interval_days,
           suggestedPrice: product.sale_price,
+          purchaseCost: product.purchase_price,
           isActive: product.is_active,
           notes: detail.notes,
         });

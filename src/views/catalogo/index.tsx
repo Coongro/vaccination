@@ -1,4 +1,9 @@
-import { usePatientsSettings, SPECIES_LABELS, formatSpecies } from '@coongro/patients';
+import {
+  usePatientsSettings,
+  SPECIES_LABELS,
+  SPECIES_ICON,
+  formatSpecies,
+} from '@coongro/patients';
 import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
@@ -71,6 +76,7 @@ interface Product {
   id: string;
   name: string;
   sale_price: string | null;
+  purchase_price: string | null;
   is_active: boolean;
 }
 
@@ -86,6 +92,8 @@ interface CatalogItem {
   scheduleDoses: number | null;
   scheduleIntervalDays: number | null;
   suggestedPrice: string | null;
+  /** Costo de compra (promedio ponderado, autorellenado al comprar — COONG-223). */
+  purchaseCost: string | null;
   isActive: boolean;
   notes: string | null;
 }
@@ -160,6 +168,7 @@ export function CatalogoView() {
           scheduleDoses: d.schedule_doses,
           scheduleIntervalDays: d.schedule_interval_days,
           suggestedPrice: p.sale_price,
+          purchaseCost: p.purchase_price,
           isActive: p.is_active,
           notes: d.notes,
         });
@@ -209,12 +218,10 @@ export function CatalogoView() {
             return v.name.toLowerCase();
           case 'lab':
             return (labMap.get(v.laboratoryId) ?? '').toLowerCase();
-          case 'vaccineType':
-            return VACCINE_TYPE_LABELS[v.vaccineType] ?? '';
+          case 'cost':
+            return v.purchaseCost ? Number(v.purchaseCost) : -1;
           case 'price':
             return v.suggestedPrice ? Number(v.suggestedPrice) : -1;
-          case 'status':
-            return v.isActive ? 1 : 0;
           default:
             return '';
         }
@@ -358,26 +365,13 @@ export function CatalogoView() {
             'div',
             { className: 'flex gap-1 flex-wrap' },
             ...item.species.map((sp) =>
-              h(UI.Badge, { key: sp, variant: 'secondary', size: 'sm' } as any, formatSpecies(sp))
+              h(
+                UI.Badge,
+                { key: sp, variant: 'info', size: 'sm' } as any,
+                h(UI.DynamicIcon, { icon: SPECIES_ICON[sp] ?? 'PawPrint', size: 11 } as any),
+                h('span', { className: 'ml-1' }, formatSpecies(sp))
+              )
             )
-          ),
-      },
-      {
-        key: 'vaccineType',
-        header: 'Tipo',
-        sortable: true,
-        render: (item: CatalogItem) =>
-          h(
-            UI.Badge,
-            {
-              variant:
-                item.vaccineType === 'rabies'
-                  ? 'warning'
-                  : item.vaccineType === 'core'
-                    ? 'default'
-                    : 'outline',
-            } as any,
-            VACCINE_TYPE_LABELS[item.vaccineType]
           ),
       },
       {
@@ -386,6 +380,20 @@ export function CatalogoView() {
         render: (item: CatalogItem) =>
           item.scheduleDoses
             ? `${item.scheduleDoses} dosis${item.scheduleIntervalDays ? ' · c/' + item.scheduleIntervalDays + 'd' : ''}`
+            : '—',
+      },
+      {
+        key: 'cost',
+        header: 'Costo',
+        className: 'text-right',
+        sortable: true,
+        render: (item: CatalogItem) =>
+          item.purchaseCost
+            ? h(
+                'span',
+                { className: 'font-mono text-cg-text-muted' },
+                '$' + Number(item.purchaseCost).toLocaleString('es-AR')
+              )
             : '—',
       },
       {
@@ -403,16 +411,22 @@ export function CatalogoView() {
             : '—',
       },
       {
-        key: 'status',
-        header: 'Estado',
+        key: 'margin',
+        header: 'Margen',
         className: 'text-right',
-        sortable: true,
-        render: (item: CatalogItem) =>
-          h(
+        render: (item: CatalogItem) => {
+          const sale = Number(item.suggestedPrice);
+          const cost = Number(item.purchaseCost);
+          // Margen sobre venta. Necesita venta > 0 y un costo cargado (vacío/null/0 caen a "—").
+          if (!item.purchaseCost || !(sale > 0))
+            return h('span', { className: 'text-cg-text-muted' }, '—');
+          const pct = ((sale - cost) / sale) * 100;
+          return h(
             UI.Badge,
-            { variant: item.isActive ? 'success' : 'secondary' } as any,
-            item.isActive ? 'Activo' : 'Inactivo'
-          ),
+            { variant: pct > 0 ? 'success-soft' : 'danger-soft', size: 'sm' } as any,
+            `${pct.toFixed(0)}%`
+          );
+        },
       },
     ],
     [labMap]

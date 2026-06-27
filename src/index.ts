@@ -9,7 +9,7 @@ export { VACCINE_TYPE_LABELS, ADMINISTRATION_ROUTE_LABELS } from './types/vaccin
 export { useVaccineCatalog } from './hooks/useVaccineCatalog.js';
 export type {
   VaccineCatalogItem,
-  CatalogFilters,
+  VaccineAgent,
   UseVaccineCatalogResult,
   CreateVaccineData,
   UpdateVaccineData,

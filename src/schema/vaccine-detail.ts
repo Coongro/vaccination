@@ -11,6 +11,18 @@ export const vaccineDetailTable = pgTable('module_vaccination_vaccine_details', 
   minimum_age_months: integer('minimum_age_months'),
   schedule_doses: integer('schedule_doses'),
   schedule_interval_days: integer('schedule_interval_days'),
+  // Nº de registro en el padrón regulatorio (SENASA en AR), autorrellenado por el
+  // buscador del vademécum. Nullable: las vacunas cargadas a mano pueden no tenerlo.
+  senasa_registration: text('senasa_registration'),
+  // Presentación (tipo + capacidad del envase, ej. "Suspensión · 125 ml"),
+  // autorrellenada desde SENASA. Texto único porque las vacunas no necesitan el
+  // desglose tipo/tamaño/unidad que sí tienen los medicamentos.
+  presentation: text('presentation'),
+  // Indicaciones / uso + pauta de dosis del fabricante (texto libre de SENASA).
+  // De acá se intenta inferir el esquema de dosis al autorrellenar.
+  indications: text('indications'),
+  // Vigencia en el padrón al cargar la vacuna: 'active' | 'discontinued' | 'unknown'.
+  senasa_status: text('senasa_status'),
   notes: text('notes'),
   deleted_at: timestamp('deleted_at', { mode: 'string' }),
   created_at: timestamp('created_at', { mode: 'string' })

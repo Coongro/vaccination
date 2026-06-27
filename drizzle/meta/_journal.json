@@ -29,6 +29,13 @@
       "when": 1783000000000,
       "tag": "0003_unify_batch_id",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782519284665,
+      "tag": "0004_tiny_doctor_doom",
+      "breakpoints": true
     }
   ]
 }

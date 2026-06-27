@@ -23,9 +23,17 @@ export function ProductDetailDrawer(props: ProductDetailDrawerProps) {
 
   if (!vaccine) return null;
 
+  const SENASA_STATUS_LABEL: Record<string, string> = {
+    active: 'Vigente',
+    discontinued: 'Dado de baja',
+    unknown: '—',
+  };
+
   const detailRows: [string, any][] = [
     ['Nombre comercial', vaccine.name],
     ['Laboratorio', laboratoryName],
+    ['Registro SENASA', vaccine.senasaRegistration || '—'],
+    ['Presentación', vaccine.presentation || '—'],
     ['Especies', vaccine.species.map((s) => formatSpecies(s)).join(', ')],
     ['Tipo', VACCINE_TYPE_LABELS[vaccine.vaccineType]],
     ['Vía', ADMINISTRATION_ROUTE_LABELS[vaccine.administrationRoute]],
@@ -40,8 +48,31 @@ export function ProductDetailDrawer(props: ProductDetailDrawerProps) {
       'Precio sugerido',
       vaccine.suggestedPrice ? `$${Number(vaccine.suggestedPrice).toLocaleString('es-AR')}` : '—',
     ],
+    [
+      'Vigencia SENASA',
+      vaccine.senasaStatus
+        ? (SENASA_STATUS_LABEL[vaccine.senasaStatus] ?? vaccine.senasaStatus)
+        : '—',
+    ],
     ['Notas', vaccine.notes || '—'],
   ];
+
+  // Título de sección reutilizable (mismo estilo que "DETALLE").
+  const sectionTitle = (text: string) =>
+    h(
+      'h3',
+      {
+        style: {
+          fontSize: '11px',
+          fontWeight: 700,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--cg-text-muted)',
+          margin: '20px 0 8px',
+        },
+      },
+      text
+    );
 
   return h(
     UI.Sheet,
@@ -132,6 +163,61 @@ export function ProductDetailDrawer(props: ProductDetailDrawerProps) {
             h('span', { style: { color: 'var(--cg-text)', textAlign: 'right' } }, value)
           )
         ),
+
+        // Composición (agentes etiológicos / cepas)
+        vaccine.components.length > 0
+          ? h(
+              'div',
+              null,
+              sectionTitle('Composición'),
+              ...vaccine.components.map((c, i) =>
+                h(
+                  'div',
+                  {
+                    key: i,
+                    style: {
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: '16px',
+                      padding: '8px 0',
+                      borderBottom:
+                        i < vaccine.components.length - 1 ? '1px solid var(--cg-border)' : 'none',
+                      fontSize: '13px',
+                    },
+                  },
+                  h('span', { style: { color: 'var(--cg-text)' } }, c.agent),
+                  c.rawStrength
+                    ? h(
+                        'span',
+                        { style: { color: 'var(--cg-text-muted)', textAlign: 'right' } },
+                        c.rawStrength
+                      )
+                    : null
+                )
+              )
+            )
+          : null,
+
+        // Indicaciones / uso (texto del fabricante)
+        vaccine.indications
+          ? h(
+              'div',
+              null,
+              sectionTitle('Indicaciones / uso'),
+              h(
+                'p',
+                {
+                  style: {
+                    fontSize: '13px',
+                    lineHeight: 1.5,
+                    color: 'var(--cg-text)',
+                    whiteSpace: 'pre-line',
+                  },
+                },
+                vaccine.indications
+              )
+            )
+          : null,
 
         // Stock / Lotes de esta vacuna (read-only; la gestión vive en Lotes y stock).
         h(

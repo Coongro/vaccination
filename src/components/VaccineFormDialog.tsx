@@ -1,4 +1,4 @@
-import { formatSpecies } from '@coongro/patients';
+import { formatSpecies, speciesCodeFromText } from '@coongro/patients';
 import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
 import { CatalogSearch, LaboratorySelect } from '@coongro/vademecum';
 import type { CatalogProductDetail } from '@coongro/vademecum';
@@ -130,23 +130,6 @@ function formToData(form: FormState): CreateVaccineData {
 // Mapeos del modelo común al form de vacuna. El buscador en sí es compartido
 // (@coongro/vademecum); lo específico de Vacunación es CÓMO se prellena cada
 // campo (distinto de Farmacia: vacunas se agrupan por especie/vía/tipo).
-
-/**
- * Mapea la taxonomía de especies de SENASA (mayúscula/plural, incluye ganado) a
- * los códigos de Pacientes (dog/cat/…). El ganado sin equivalente de mascota cae
- * en 'other'. Es una heurística chica y propia de este dominio; vet-pharmacy
- * tiene su gemela hasta que exista un normalizador de especies compartido
- * (taxonomía de Pacientes), refactor que excede este ticket.
- */
-function senasaSpeciesToCode(raw: string): string {
-  const t = raw.toLowerCase();
-  if (t.includes('canino') || t.includes('perro')) return 'dog';
-  if (t.includes('felino') || t.includes('gato')) return 'cat';
-  if (t.includes('ave') || t.includes('avi')) return 'bird';
-  if (t.includes('reptil')) return 'reptile';
-  if (t.includes('roedor')) return 'rodent';
-  return 'other';
-}
 
 /** Vías de SENASA (texto libre) → enum de vacuna. Sin match claro → 'other'. */
 function senasaRouteToEnum(routes: string[]): AdministrationRoute {
@@ -349,7 +332,7 @@ export function VaccineFormDialog(props: VaccineFormDialogProps) {
   const handleSenaSelect = useCallback(
     async (detail: CatalogProductDetail) => {
       setSenaSelected(detail);
-      const codes = [...new Set(detail.species.map(senasaSpeciesToCode))].filter((c) =>
+      const codes = [...new Set(detail.species.map(speciesCodeFromText))].filter((c) =>
         availableSpecies.includes(c)
       );
       const route = detail.administrationRoutes.length

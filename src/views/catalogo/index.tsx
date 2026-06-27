@@ -6,14 +6,19 @@ import {
 } from '@coongro/patients';
 import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
 
-const UI = getHostUI();
 import { ProductDetailDrawer } from '../../components/ProductDetailDrawer.js';
 import { VaccineFormDialog } from '../../components/VaccineFormDialog.js';
+import {
+  useVaccineCatalog,
+  type VaccineCatalogItem,
+  type CreateVaccineData,
+} from '../../hooks/useVaccineCatalog.js';
 import { VACCINE_TYPE_LABELS, ADMINISTRATION_ROUTE_LABELS } from '../../types/vaccination.js';
-import type { VaccineType, AdministrationRoute } from '../../types/vaccination.js';
+import type { VaccineType } from '../../types/vaccination.js';
 
+const UI = getHostUI();
 const React = getHostReact();
-const { useState, useEffect, useCallback, useMemo, useRef } = React;
+const { useState, useEffect, useCallback, useMemo } = React;
 const h = React.createElement;
 
 // El host expone `window.coongro.toast.show({ title, message, type })` — NO tiene
@@ -21,7 +26,7 @@ const h = React.createElement;
 // que acá evitamos porque crashea en plugins de Verdaccio). Mapeamos a `.show`.
 const MODULE_ID = '@coongro/vaccination';
 
-function emitToast(title: string, message: string, type: 'success' | 'info'): void {
+function emitToast(title: string, message: string, type: 'success' | 'info' | 'error'): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const host = (globalThis as any).coongro?.toast as
     | {
@@ -34,19 +39,8 @@ function emitToast(title: string, message: string, type: 'success' | 'info'): vo
 const toast = {
   success: (title: string, message: string) => emitToast(title, message, 'success'),
   info: (title: string, message: string) => emitToast(title, message, 'info'),
+  error: (title: string, message: string) => emitToast(title, message, 'error'),
 };
-
-function uuid(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
 
 type EstadoFilter = 'activos' | 'inactivos' | 'todos';
 
@@ -59,57 +53,10 @@ interface Lab {
   updated_at: string;
 }
 
-interface VaccineDetail {
-  id: string;
-  product_id: string;
-  laboratory_id: string;
-  species: string[];
-  vaccine_type: string;
-  administration_route: string;
-  minimum_age_months: number | null;
-  schedule_doses: number | null;
-  schedule_interval_days: number | null;
-  notes: string | null;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  sale_price: string | null;
-  purchase_price: string | null;
-  is_active: boolean;
-}
-
-interface CatalogItem {
-  productId: string;
-  detailId: string;
-  name: string;
-  laboratoryId: string;
-  species: string[];
-  vaccineType: VaccineType;
-  administrationRoute: AdministrationRoute;
-  minimumAgeMonths: number | null;
-  scheduleDoses: number | null;
-  scheduleIntervalDays: number | null;
-  suggestedPrice: string | null;
-  /** Costo de compra (promedio ponderado, autorellenado al comprar — COONG-223). */
-  purchaseCost: string | null;
-  isActive: boolean;
-  notes: string | null;
-}
-
-interface CreateVaccineData {
-  name: string;
-  laboratoryId: string;
-  species: string[];
-  vaccineType: VaccineType;
-  administrationRoute: AdministrationRoute;
-  minimumAgeMonths?: number | null;
-  scheduleDoses?: number | null;
-  scheduleIntervalDays?: number | null;
-  suggestedPrice?: string | null;
-  notes?: string | null;
-}
+// El catálogo (items + CRUD + tipos) vive en useVaccineCatalog; la vista solo
+// aporta lo presentacional. `CatalogItem` es un alias local del tipo del hook
+// para no renombrar en todo el archivo.
+type CatalogItem = VaccineCatalogItem;
 
 export function CatalogoView() {
   const { settings: patientsSettings } = usePatientsSettings();
@@ -119,11 +66,10 @@ export function CatalogoView() {
     [patientsSettings.enabledSpecies]
   );
 
-  const [items, setItems] = useState<CatalogItem[]>([]);
-  const [labs, setLabs] = useState<Lab[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Fuente única de los datos del catálogo (items + CRUD).
+  const { items, loading, error, refetch, create, update, toggleActive } = useVaccineCatalog();
 
+  const [labs, setLabs] = useState<Lab[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingVaccine, setEditingVaccine] = useState<CatalogItem | null>(null);
   const [detailVaccine, setDetailVaccine] = useState<CatalogItem | null>(null);
@@ -135,58 +81,22 @@ export function CatalogoView() {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc' | null>(null);
 
-  const loadingRef = useRef(false);
-
-  const loadData = useCallback(async () => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
-    setLoading(true);
-    setError(null);
-    try {
-      const [products, details, laboratories] = await Promise.all([
-        actions.execute<Product[]>('products.items.list'),
-        actions.execute<VaccineDetail[]>('vaccination.catalog.list'),
-        actions.execute<Lab[]>('vademecum.laboratories.list'),
-      ]);
-
-      const detailByProductId = new Map<string, VaccineDetail>();
-      for (const d of details) detailByProductId.set(d.product_id, d);
-
-      const merged: CatalogItem[] = [];
-      for (const p of products) {
-        const d = detailByProductId.get(p.id);
-        if (!d) continue;
-        merged.push({
-          productId: p.id,
-          detailId: d.id,
-          name: p.name,
-          laboratoryId: d.laboratory_id,
-          species: d.species ?? [],
-          vaccineType: d.vaccine_type as VaccineType,
-          administrationRoute: d.administration_route as AdministrationRoute,
-          minimumAgeMonths: d.minimum_age_months,
-          scheduleDoses: d.schedule_doses,
-          scheduleIntervalDays: d.schedule_interval_days,
-          suggestedPrice: p.sale_price,
-          purchaseCost: p.purchase_price,
-          isActive: p.is_active,
-          notes: d.notes,
-        });
-      }
-
-      setItems(merged);
-      setLabs(Array.isArray(laboratories) ? laboratories : []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar catálogo');
-    } finally {
-      setLoading(false);
-      loadingRef.current = false;
-    }
-  }, []);
-
+  // Laboratorios (maestro compartido) — presentacional: alimenta columnas y filtro.
+  // Carga aparte de los items (que los trae el hook) porque vienen de otra fuente.
   useEffect(() => {
-    void loadData();
-  }, [loadData]);
+    let active = true;
+    void (async () => {
+      try {
+        const result = await actions.execute<Lab[]>('vademecum.laboratories.list');
+        if (active) setLabs(Array.isArray(result) ? result : []);
+      } catch {
+        /* el catálogo igual se muestra; sin labs, las columnas caen a "—" */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const labMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -253,84 +163,42 @@ export function CatalogoView() {
     setSortDir(direction);
   }, []);
 
+  // Los handlers delegan el CRUD en el hook y solo agregan el toast de éxito. En
+  // error, NO atrapan acá: dejan propagar al handleSubmit del form, que muestra el
+  // toast de error y mantiene el diálogo abierto.
   const handleCreate = useCallback(
     async (data: CreateVaccineData) => {
-      const productId = uuid();
-      await actions.execute('products.items.create', {
-        data: {
-          id: productId,
-          name: data.name,
-          sale_price: data.suggestedPrice ?? null,
-          tags: [data.vaccineType],
-          metadata: { plugin: 'vaccination' },
-        },
-      });
-      await actions.execute('vaccination.catalog.create', {
-        data: {
-          id: uuid(),
-          product_id: productId,
-          laboratory_id: data.laboratoryId,
-          species: data.species,
-          vaccine_type: data.vaccineType,
-          administration_route: data.administrationRoute,
-          minimum_age_months: data.minimumAgeMonths ?? null,
-          schedule_doses: data.scheduleDoses ?? null,
-          schedule_interval_days: data.scheduleIntervalDays ?? null,
-          notes: data.notes ?? null,
-        },
-      });
-      toast?.success('Vacuna creada', `"${data.name}" agregada al catálogo`);
-      await loadData();
+      await create(data);
+      toast.success('Vacuna creada', `"${data.name}" agregada al catálogo`);
     },
-    [loadData]
+    [create]
   );
 
   const handleUpdate = useCallback(
     async (data: CreateVaccineData) => {
       if (!editingVaccine) return;
-      const productUpdate: Record<string, unknown> = {};
-      const detailUpdate: Record<string, unknown> = {};
-      productUpdate.name = data.name;
-      productUpdate.sale_price = data.suggestedPrice ?? null;
-      productUpdate.tags = [data.vaccineType];
-      detailUpdate.laboratory_id = data.laboratoryId;
-      detailUpdate.species = data.species;
-      detailUpdate.vaccine_type = data.vaccineType;
-      detailUpdate.administration_route = data.administrationRoute;
-      detailUpdate.minimum_age_months = data.minimumAgeMonths ?? null;
-      detailUpdate.schedule_doses = data.scheduleDoses ?? null;
-      detailUpdate.schedule_interval_days = data.scheduleIntervalDays ?? null;
-      detailUpdate.notes = data.notes ?? null;
-      await Promise.all([
-        actions.execute('products.items.update', {
-          id: editingVaccine.productId,
-          data: productUpdate,
-        }),
-        actions.execute('vaccination.catalog.update', {
-          id: editingVaccine.detailId,
-          data: detailUpdate,
-        }),
-      ]);
-      toast?.success('Vacuna actualizada', `"${data.name}" guardada`);
-      await loadData();
+      await update(editingVaccine.productId, editingVaccine.detailId, data);
+      toast.success('Vacuna actualizada', `"${data.name}" guardada`);
     },
-    [editingVaccine, loadData]
+    [editingVaccine, update]
   );
 
+  // El toggle se dispara desde el drawer (no del form), así que maneja su propio
+  // error con un toast.
   const handleToggleActive = useCallback(
     async (item: CatalogItem) => {
-      await actions.execute('products.items.update', {
-        id: item.productId,
-        data: { is_active: !item.isActive },
-      });
-      toast?.info(
-        item.isActive ? 'Vacuna desactivada' : 'Vacuna activada',
-        `"${item.name}" ${item.isActive ? 'desactivada' : 'activada'}`
-      );
-      if (detailVaccine?.productId === item.productId) setDetailVaccine(null);
-      await loadData();
+      try {
+        await toggleActive(item.productId, !item.isActive);
+        toast.info(
+          item.isActive ? 'Vacuna desactivada' : 'Vacuna activada',
+          `"${item.name}" ${item.isActive ? 'desactivada' : 'activada'}`
+        );
+        if (detailVaccine?.productId === item.productId) setDetailVaccine(null);
+      } catch (err) {
+        toast.error('Error', err instanceof Error ? err.message : 'No se pudo cambiar el estado');
+      }
     },
-    [detailVaccine, loadData]
+    [detailVaccine, toggleActive]
   );
 
   const columns = useMemo(
@@ -524,7 +392,7 @@ export function CatalogoView() {
           rowKey: (item: CatalogItem) => item.productId,
           loading,
           error,
-          onRetry: loadData,
+          onRetry: refetch,
           columns,
           searchPlaceholder: 'Buscar por nombre del producto',
           searchValue: search,

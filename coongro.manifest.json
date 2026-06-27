@@ -60,6 +60,11 @@
         "prefix": "vaccination.catalog"
       },
       {
+        "module": "./dist/repositories/vaccine-component.repository.js",
+        "export": "VaccineComponentRepository",
+        "prefix": "vaccination.components"
+      },
+      {
         "module": "./dist/repositories/applied-vaccination.repository.js",
         "export": "AppliedVaccinationRepository",
         "prefix": "vaccination.applied"

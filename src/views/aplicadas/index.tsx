@@ -1,5 +1,5 @@
 import { formatSpecies, SPECIES_LABELS } from '@coongro/patients';
-import { getHostReact, getHostUI } from '@coongro/plugin-sdk';
+import { getHostReact, getHostUI, createToastApi } from '@coongro/plugin-sdk';
 
 const UI = getHostUI();
 import { AppliedDetailDrawer } from '../../components/AppliedDetailDrawer.js';
@@ -15,15 +15,8 @@ const h = React.createElement;
 
 const MODULE_ID = '@coongro/vaccination';
 
-function emitToast(title: string, message: string, type: 'success' | 'info'): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const host = (globalThis as any).coongro?.toast as
-    | {
-        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
-      }
-    | undefined;
-  host?.show?.({ title, message, type, moduleId: MODULE_ID });
-}
+// Toast del SDK con el moduleId pre-inyectado (standalone, no requiere contexto).
+const toast = createToastApi(MODULE_ID);
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -261,7 +254,7 @@ export function AplicadasView(props: AplicadasViewProps = {}) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    emitToast('Exportado', `${filteredItems.length} aplicaciones a CSV`, 'info');
+    toast.info('Exportado', `${filteredItems.length} aplicaciones a CSV`);
   };
 
   const columns = useMemo(

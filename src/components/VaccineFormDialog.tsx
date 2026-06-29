@@ -1,5 +1,5 @@
 import { formatSpecies, speciesCodeFromText } from '@coongro/patients';
-import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
+import { getHostReact, getHostUI, actions, toast } from '@coongro/plugin-sdk';
 import { CatalogSearch, LaboratorySelect } from '@coongro/vademecum';
 import type { CatalogProductDetail } from '@coongro/vademecum';
 
@@ -11,12 +11,6 @@ const UI = getHostUI();
 const React = getHostReact();
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 const h = React.createElement;
-
-/** Toast del host (primitivo de la plataforma), para avisar fallos del guardado. */
-function hostToast(title: string, message: string, type: 'info' | 'error'): void {
-  const host = (globalThis as { coongro?: { toast?: { show?: (o: unknown) => void } } }).coongro;
-  host?.toast?.show?.({ title, message, type });
-}
 
 interface VaccineFormDialogProps {
   open: boolean;
@@ -390,11 +384,7 @@ export function VaccineFormDialog(props: VaccineFormDialogProps) {
     } catch (err) {
       // El path de guardado (productos + detalle + agentes) no es atómico; si falla
       // a mitad hay que avisar (antes era silencioso) en vez de cerrar como si nada.
-      hostToast(
-        'Error',
-        err instanceof Error ? err.message : 'No se pudo guardar la vacuna',
-        'error'
-      );
+      toast.error('Error', err instanceof Error ? err.message : 'No se pudo guardar la vacuna');
     } finally {
       setSaving(false);
     }

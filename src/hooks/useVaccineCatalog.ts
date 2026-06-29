@@ -1,9 +1,8 @@
-import { getHostReact, actions } from '@coongro/plugin-sdk';
+import { getHostReact, actions, uuid } from '@coongro/plugin-sdk';
 
 import type { VaccineComponentRow } from '../schema/vaccine-component.js';
 import type { VaccineDetailRow } from '../schema/vaccine-detail.js';
 import type { VaccineType, AdministrationRoute } from '../types/vaccination.js';
-import { uuid } from '../utils/uuid.js';
 
 const { useState, useEffect, useCallback, useRef } = getHostReact();
 

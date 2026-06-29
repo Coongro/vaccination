@@ -1,5 +1,5 @@
 import { useTenantTimezone } from '@coongro/calendar';
-import { getHostReact, views } from '@coongro/plugin-sdk';
+import { getHostReact, views, createToastApi } from '@coongro/plugin-sdk';
 
 import { formatDate } from '../components/date-utils.js';
 import type { ScheduleInput } from '../components/ScheduleNextDoseDialog.js';
@@ -16,16 +16,8 @@ const { useState, useCallback } = React;
 
 const MODULE_ID = '@coongro/vaccination';
 
-function toast(title: string, message: string, type: 'success' | 'info'): void {
-  const g = globalThis as {
-    coongro?: {
-      toast?: {
-        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
-      };
-    };
-  };
-  g.coongro?.toast?.show?.({ title, message, type, moduleId: MODULE_ID });
-}
+// Toast del SDK con el moduleId pre-inyectado (standalone, no requiere contexto).
+const toast = createToastApi(MODULE_ID);
 
 /**
  * Orquesta el agendado de la próxima dosis para las vistas:
@@ -64,14 +56,13 @@ export function useNextDoseScheduler(reload: () => Promise<void>) {
           endTime,
           tz,
         });
-        toast(
+        toast.success(
           'Turno agendado',
-          `${input.patientName} · ${formatDate(input.nextDate)} ${time}–${endTime}`,
-          'success'
+          `${input.patientName} · ${formatDate(input.nextDate)} ${time}–${endTime}`
         );
         await reload();
       } catch {
-        toast('No se pudo agendar', 'La dosis quedó pendiente en Próximas dosis.', 'info');
+        toast.info('No se pudo agendar', 'La dosis quedó pendiente en Próximas dosis.');
       }
     },
     [nextDoseTime, nextDoseDuration, tz, reload]

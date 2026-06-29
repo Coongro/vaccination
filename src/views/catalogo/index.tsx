@@ -4,7 +4,7 @@ import {
   SPECIES_ICON,
   formatSpecies,
 } from '@coongro/patients';
-import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
+import { getHostReact, getHostUI, actions, createToastApi } from '@coongro/plugin-sdk';
 
 import { ProductDetailDrawer } from '../../components/ProductDetailDrawer.js';
 import { VaccineFormDialog } from '../../components/VaccineFormDialog.js';
@@ -21,26 +21,11 @@ const React = getHostReact();
 const { useState, useEffect, useCallback, useMemo } = React;
 const h = React.createElement;
 
-// El host expone `window.coongro.toast.show({ title, message, type })` — NO tiene
-// los helpers `.success/.info` (esos los agrega el wrapper del SDK vía usePlugin,
-// que acá evitamos porque crashea en plugins de Verdaccio). Mapeamos a `.show`.
 const MODULE_ID = '@coongro/vaccination';
 
-function emitToast(title: string, message: string, type: 'success' | 'info' | 'error'): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const host = (globalThis as any).coongro?.toast as
-    | {
-        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
-      }
-    | undefined;
-  host?.show?.({ title, message, type, moduleId: MODULE_ID });
-}
-
-const toast = {
-  success: (title: string, message: string) => emitToast(title, message, 'success'),
-  info: (title: string, message: string) => emitToast(title, message, 'info'),
-  error: (title: string, message: string) => emitToast(title, message, 'error'),
-};
+// Toast del SDK con el moduleId pre-inyectado. El `toast` standalone del SDK no
+// requiere el contexto de usePlugin (que antes crasheaba en plugins de Verdaccio).
+const toast = createToastApi(MODULE_ID);
 
 type EstadoFilter = 'activos' | 'inactivos' | 'todos';
 

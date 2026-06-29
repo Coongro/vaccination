@@ -1,12 +1,11 @@
 import { localToUTC, addMinutes } from '@coongro/datetime';
-import { getHostReact, actions } from '@coongro/plugin-sdk';
+import { getHostReact, actions, uuid } from '@coongro/plugin-sdk';
 
 import type {
   ApplyProductOption,
   ApplyLoteOption,
   ApplyFormData,
 } from '../components/ApplyVaccineDialog.js';
-import { uuid } from '../utils/uuid.js';
 
 const React = getHostReact();
 const { useState, useEffect, useCallback, useRef } = React;

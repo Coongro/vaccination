@@ -1,5 +1,5 @@
-import { formatSpecies } from '@coongro/patients';
-import { getHostReact, getHostUI, actions } from '@coongro/plugin-sdk';
+import { formatSpecies, speciesCodeFromText } from '@coongro/patients';
+import { getHostReact, getHostUI, actions, toast } from '@coongro/plugin-sdk';
 import { CatalogSearch, LaboratorySelect } from '@coongro/vademecum';
 import type { CatalogProductDetail } from '@coongro/vademecum';
 
@@ -11,12 +11,6 @@ const UI = getHostUI();
 const React = getHostReact();
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 const h = React.createElement;
-
-/** Toast del host (primitivo de la plataforma), para avisar fallos del guardado. */
-function hostToast(title: string, message: string, type: 'info' | 'error'): void {
-  const host = (globalThis as { coongro?: { toast?: { show?: (o: unknown) => void } } }).coongro;
-  host?.toast?.show?.({ title, message, type });
-}
 
 interface VaccineFormDialogProps {
   open: boolean;
@@ -130,23 +124,6 @@ function formToData(form: FormState): CreateVaccineData {
 // Mapeos del modelo común al form de vacuna. El buscador en sí es compartido
 // (@coongro/vademecum); lo específico de Vacunación es CÓMO se prellena cada
 // campo (distinto de Farmacia: vacunas se agrupan por especie/vía/tipo).
-
-/**
- * Mapea la taxonomía de especies de SENASA (mayúscula/plural, incluye ganado) a
- * los códigos de Pacientes (dog/cat/…). El ganado sin equivalente de mascota cae
- * en 'other'. Es una heurística chica y propia de este dominio; vet-pharmacy
- * tiene su gemela hasta que exista un normalizador de especies compartido
- * (taxonomía de Pacientes), refactor que excede este ticket.
- */
-function senasaSpeciesToCode(raw: string): string {
-  const t = raw.toLowerCase();
-  if (t.includes('canino') || t.includes('perro')) return 'dog';
-  if (t.includes('felino') || t.includes('gato')) return 'cat';
-  if (t.includes('ave') || t.includes('avi')) return 'bird';
-  if (t.includes('reptil')) return 'reptile';
-  if (t.includes('roedor')) return 'rodent';
-  return 'other';
-}
 
 /** Vías de SENASA (texto libre) → enum de vacuna. Sin match claro → 'other'. */
 function senasaRouteToEnum(routes: string[]): AdministrationRoute {
@@ -349,7 +326,7 @@ export function VaccineFormDialog(props: VaccineFormDialogProps) {
   const handleSenaSelect = useCallback(
     async (detail: CatalogProductDetail) => {
       setSenaSelected(detail);
-      const codes = [...new Set(detail.species.map(senasaSpeciesToCode))].filter((c) =>
+      const codes = [...new Set(detail.species.map(speciesCodeFromText))].filter((c) =>
         availableSpecies.includes(c)
       );
       const route = detail.administrationRoutes.length
@@ -407,11 +384,7 @@ export function VaccineFormDialog(props: VaccineFormDialogProps) {
     } catch (err) {
       // El path de guardado (productos + detalle + agentes) no es atómico; si falla
       // a mitad hay que avisar (antes era silencioso) en vez de cerrar como si nada.
-      hostToast(
-        'Error',
-        err instanceof Error ? err.message : 'No se pudo guardar la vacuna',
-        'error'
-      );
+      toast.error('Error', err instanceof Error ? err.message : 'No se pudo guardar la vacuna');
     } finally {
       setSaving(false);
     }

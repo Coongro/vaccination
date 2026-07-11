@@ -1,6 +1,6 @@
 {
   "id": "vaccination",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "apiVersion": "2.0",
   "entry": "dist/entry.js",
   "assets": {
@@ -120,9 +120,18 @@
               "description": "Al registrar una vacunación, controla si se ofrece agendar el turno de la próxima dosis automáticamente.",
               "default": "ask",
               "options": [
-                { "value": "off", "label": "No agendar" },
-                { "value": "ask", "label": "Preguntar" },
-                { "value": "auto", "label": "Agendar automáticamente" }
+                {
+                  "value": "off",
+                  "label": "No agendar"
+                },
+                {
+                  "value": "ask",
+                  "label": "Preguntar"
+                },
+                {
+                  "value": "auto",
+                  "label": "Agendar automáticamente"
+                }
               ],
               "tags": [
                 "vaccination",
@@ -177,7 +186,14 @@
               "label": "Duración del turno de próxima dosis",
               "description": "Duración por defecto del turno (la hora de fin se calcula como inicio + esta duración). El veterinario puede ajustar la hora de fin al agendar.",
               "default": "15",
-              "options": ["10", "15", "20", "30", "45", "60"],
+              "options": [
+                "10",
+                "15",
+                "20",
+                "30",
+                "45",
+                "60"
+              ],
               "tags": [
                 "vaccination",
                 "nextdosedefaultduration",

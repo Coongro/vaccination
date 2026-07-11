@@ -237,7 +237,6 @@ export function ApplyVaccineDialog(props: ApplyVaccineDialogProps) {
     open,
     onOpenChange: (val: boolean) => !val && onClose(),
     title: 'Registrar aplicación',
-    subtitle: 'La próxima dosis se calcula del esquema del catálogo y es editable.',
     size: 'lg',
     submitLabel: 'Guardar',
     onCancel: onClose,

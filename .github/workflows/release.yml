@@ -13,6 +13,13 @@ jobs:
     name: Version or Publish
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Los git commit/push que hacen changesets/action (bump) y el paso de sync
+    # NO deben disparar los hooks de husky: el pre-commit/pre-push corre
+    # `npm run quality`, cuyo format:check falla en CI por el prettier flotante
+    # (npm install baja una minor nueva). Sin esto, el publish ocurre pero el
+    # `git push origin develop` del sync falla → develop queda atrás (divergencia).
+    env:
+      HUSKY: 0
     permissions:
       contents: write
       pull-requests: write
@@ -27,8 +34,8 @@ jobs:
 
       - name: Configure @coongro registry
         run: |
-          echo "@coongro:registry=\${{ secrets.STAGING_VERDACCIO_URL }}" > .npmrc
-          echo "//\${{ secrets.STAGING_VERDACCIO_URL_HOST }}/:_authToken=\${{ secrets.STAGING_VERDACCIO_TOKEN }}" >> .npmrc
+          echo "@coongro:registry=${{ secrets.STAGING_VERDACCIO_URL }}" > .npmrc
+          echo "//${{ secrets.STAGING_VERDACCIO_URL_HOST }}/:_authToken=${{ secrets.STAGING_VERDACCIO_TOKEN }}" >> .npmrc
 
       - name: Install dependencies
         run: |
@@ -40,12 +47,12 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: publish: npm publish --ignore-scripts --registry ${{ secrets.STAGING_VERDACCIO_URL }}
-          publish: npm publish --ignore-scripts --registry \${{ secrets.STAGING_VERDACCIO_URL }}
+          version: sh scripts/changeset-version.sh
+          publish: npm publish --ignore-scripts --registry ${{ secrets.STAGING_VERDACCIO_URL }}
           title: "Version Packages"
           commit: "chore: version packages"
         env:
-          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
         if: steps.changesets.outputs.published == 'true'

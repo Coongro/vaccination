@@ -10,6 +10,13 @@ jobs:
     name: Build & Publish to Production
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Los git commit/push que hacen changesets/action y el sync/tag NO deben
+    # disparar los hooks de husky: pre-commit/pre-push corren `npm run quality`,
+    # cuyo format:check falla en CI por el prettier flotante (npm install baja
+    # una minor nueva). Sin esto, el publish ocurre pero el git push del sync/tag
+    # falla → develop queda atrás (divergencia) o el tag/release se pierde.
+    env:
+      HUSKY: 0
     permissions:
       contents: write
     steps:

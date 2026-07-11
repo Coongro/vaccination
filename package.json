@@ -1,6 +1,6 @@
 {
   "name": "@coongro/vaccination",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Módulo de vacunación veterinaria: catálogo de productos vacunales, laboratorios, lotes, aplicaciones y próximas dosis. Extiende el plugin products con datos específicos de vacunas.",
   "main": "dist/index.js",

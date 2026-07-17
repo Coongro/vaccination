@@ -1,15 +1,21 @@
 /**
- * Lectura de los settings del plugin de vacunación.
- * Usa useSettings del SDK para reactividad automática.
+ * Lectura de los settings del plugin de vacunación (hook de dominio).
+ * Delega el modo de agendado a la capa tipada generada (`settings.gen.ts`).
  */
 import { useSettings } from '@coongro/plugin-sdk';
+
+import { readVaccinationSettings } from '../settings/settings.gen.js';
 
 /** Comportamiento al registrar una aplicación respecto al turno de la próxima dosis. */
 export type NextDoseAppointmentMode = 'off' | 'ask' | 'auto';
 
-/** Hora por defecto (HH:mm) si el setting no está seteado. */
+/**
+ * Prefills FIJOS del diálogo de próxima dosis. Ya NO son settings: la hora y la
+ * duración reales las elige el veterinario al agendar (el diálogo tiene TimePicker
+ * + sugerencia de slot libre). Antes eran dos enums que redefinían conceptos de la
+ * agenda (`appointments.agenda.*`) — se quitaron en COONG-248.
+ */
 const DEFAULT_NEXT_DOSE_TIME = '09:00';
-/** Duración por defecto (min) si el setting no está seteado. */
 const DEFAULT_NEXT_DOSE_DURATION = 15;
 
 export interface VaccinationSettings {
@@ -20,22 +26,18 @@ export interface VaccinationSettings {
    * - `auto` → se agenda el turno automáticamente.
    */
   nextDoseMode: NextDoseAppointmentMode;
-  /** Hora de inicio preferida (HH:mm) del turno de próxima dosis. */
+  /** Hora de inicio prefill (HH:mm) del turno de próxima dosis. */
   nextDoseTime: string;
-  /** Duración por defecto (minutos) del turno — la hora de fin = inicio + esto. */
+  /** Duración prefill (minutos) del turno — la hora de fin = inicio + esto. */
   nextDoseDuration: number;
 }
 
 export function useVaccinationSettings(): VaccinationSettings {
   const { values } = useSettings('vaccination.');
-  const mode = values['vaccination.nextDoseAppointment'];
-  const time = values['vaccination.nextDoseDefaultTime'];
-  const duration = Number(values['vaccination.nextDoseDefaultDuration']);
+  const { nextDoseAppointment } = readVaccinationSettings(values);
   return {
-    nextDoseMode: mode === 'off' || mode === 'auto' ? mode : 'ask',
-    nextDoseTime:
-      typeof time === 'string' && /^\d{2}:\d{2}$/.test(time) ? time : DEFAULT_NEXT_DOSE_TIME,
-    nextDoseDuration:
-      Number.isFinite(duration) && duration > 0 ? duration : DEFAULT_NEXT_DOSE_DURATION,
+    nextDoseMode: nextDoseAppointment,
+    nextDoseTime: DEFAULT_NEXT_DOSE_TIME,
+    nextDoseDuration: DEFAULT_NEXT_DOSE_DURATION,
   };
 }

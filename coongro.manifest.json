@@ -90,13 +90,7 @@
       }
     ],
     "settings": {
-      "groups": [
-        {
-          "id": "vaccination",
-          "label": "Vacunación",
-          "order": 50
-        }
-      ],
+      "groups": [{ "id": "vaccination", "label": "Vacunación", "order": 50 }],
       "pages": [
         {
           "id": "vaccination.general",
@@ -128,63 +122,8 @@
                 "vaccination",
                 "nextdoseappointment",
                 "turno",
-                "para",
                 "próxima",
                 "dosis"
-              ]
-            },
-            {
-              "key": "vaccination.nextDoseDefaultTime",
-              "type": "enum",
-              "label": "Hora del turno de próxima dosis",
-              "description": "Hora preferida para el turno de la próxima dosis. Pre-carga el inicio al agendar; el veterinario la puede cambiar.",
-              "default": "09:00",
-              "options": [
-                "08:00",
-                "08:30",
-                "09:00",
-                "09:30",
-                "10:00",
-                "10:30",
-                "11:00",
-                "11:30",
-                "12:00",
-                "12:30",
-                "13:00",
-                "13:30",
-                "14:00",
-                "14:30",
-                "15:00",
-                "15:30",
-                "16:00",
-                "16:30",
-                "17:00",
-                "17:30",
-                "18:00"
-              ],
-              "tags": [
-                "vaccination",
-                "nextdosedefaulttime",
-                "hora",
-                "turno",
-                "próxima",
-                "dosis"
-              ]
-            },
-            {
-              "key": "vaccination.nextDoseDefaultDuration",
-              "type": "enum",
-              "label": "Duración del turno de próxima dosis",
-              "description": "Duración por defecto del turno (la hora de fin se calcula como inicio + esta duración). El veterinario puede ajustar la hora de fin al agendar.",
-              "default": "15",
-              "options": ["10", "15", "20", "30", "45", "60"],
-              "tags": [
-                "vaccination",
-                "nextdosedefaultduration",
-                "duración",
-                "turno",
-                "minutos",
-                "fin"
               ]
             }
           ]

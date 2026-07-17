@@ -1,6 +1,6 @@
 {
   "id": "vaccination",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "apiVersion": "2.0",
   "entry": "dist/entry.js",
   "assets": {

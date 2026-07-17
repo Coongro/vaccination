@@ -153,7 +153,6 @@ export function ScheduleNextDoseDialog({
     open: input !== null,
     onOpenChange: (val: boolean) => !val && onClose(),
     title: 'Agendar turno',
-    eyebrow: 'PRÓXIMA DOSIS',
     subtitle: input ? `${input.patientName} · ${input.productName}` : '',
     size: 'md',
     submitLabel: saving ? 'Agendando…' : 'Agendar turno',

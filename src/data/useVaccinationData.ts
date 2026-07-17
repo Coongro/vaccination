@@ -10,6 +10,19 @@ import type {
 const React = getHostReact();
 const { useState, useEffect, useCallback, useRef } = React;
 
+const MODULE_ID = '@coongro/vaccination';
+
+/** Aviso no bloqueante vía el host (mismo patrón que el resto del plugin). */
+function toast(title: string, message: string, type: 'success' | 'info'): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+  const host = (globalThis as any).coongro?.toast as
+    | {
+        show?: (opts: { title: string; message: string; type?: string; moduleId?: string }) => void;
+      }
+    | undefined;
+  host?.show?.({ title, message, type, moduleId: MODULE_ID });
+}
+
 /**
  * Registra una aplicación de vacuna: crea el `applied_vaccination` y, si hay lote,
  * descuenta una dosis del lote en `products.batches` (motor unificado, COONG-220).
@@ -35,13 +48,28 @@ export async function applyVaccine(data: ApplyFormData): Promise<string> {
     // Descuento vía el motor de lotes (products): resta 1 dosis del lote elegido,
     // marca agotado al llegar a 0 y registra el movimiento con trazabilidad
     // (lote → esta aplicación). Mismo motor que usa farmacia.
-    await actions.execute('products.batches.consume', {
-      productId: data.productId,
-      quantity: 1,
-      batchId: data.batchId,
-      referenceType: 'vaccination_application',
-      referenceId: appliedId,
-    });
+    //
+    // Selección MANUAL del frasco: el vet ya tiene el lote físico en la mano, así
+    // que se permite descontarlo aunque esté vencido (`allowExpired`) — bloquearlo
+    // no matchea la realidad. Pero si estaba vencido, se avisa.
+    const result = await actions.execute<{ batches?: Array<{ expired?: boolean }> }>(
+      'products.batches.consume',
+      {
+        productId: data.productId,
+        quantity: 1,
+        batchId: data.batchId,
+        allowExpired: true,
+        referenceType: 'vaccination_application',
+        referenceId: appliedId,
+      }
+    );
+    if (result?.batches?.some((b) => b.expired)) {
+      toast(
+        'Lote vencido',
+        'Se aplicó desde un lote vencido. Verificá el vencimiento del frasco.',
+        'info'
+      );
+    }
   }
   return appliedId;
 }

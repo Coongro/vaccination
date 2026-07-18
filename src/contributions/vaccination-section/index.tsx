@@ -7,6 +7,7 @@ import type { ApplyFormData } from '../../components/ApplyVaccineDialog.js';
 import { formatDate } from '../../components/date-utils.js';
 import { ScheduleNextDoseDialog } from '../../components/ScheduleNextDoseDialog.js';
 import { chargeAppliedVaccine } from '../../data/billing.js';
+import { scheduleDoseReminderIfOn } from '../../data/reminders.js';
 import { useNextDoseScheduler } from '../../data/useNextDoseScheduler.js';
 import { useVaccinationData, applyVaccine } from '../../data/useVaccinationData.js';
 import { useVaccinationSettings } from '../../data/useVaccinationSettings.js';
@@ -75,6 +76,15 @@ export function VaccinationSection(props: Record<string, unknown>): ReturnType<t
 
       // Cobro: desde la ficha es venta de mostrador (sin consulta). Precio = catálogo.
       const prod = products.find((p) => p.productId === data.productId);
+
+      // Recordatorio de refuerzo (opt-in): aviso in-app al equipo antes de la próxima dosis.
+      void scheduleDoseReminderIfOn({
+        appliedId,
+        nextDoseDateISO: data.nextDoseDate,
+        petName,
+        vaccineName: prod?.name ?? null,
+      });
+
       void chargeAppliedVaccine({
         appliedId,
         productId: data.productId,

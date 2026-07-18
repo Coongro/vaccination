@@ -4,6 +4,7 @@ import { BatchPicker } from '@coongro/products';
 
 const UI = getHostUI();
 import { chargeAppliedVaccine } from '../../data/billing.js';
+import { scheduleDoseReminderIfOn } from '../../data/reminders.js';
 import {
   useVaccinationData,
   applyVaccine,
@@ -161,6 +162,14 @@ export function ConsultationVaccinesSection(_props: Record<string, unknown>) {
               staffId,
               nextDoseDate,
               notes: null,
+            });
+
+            // Recordatorio de refuerzo (opt-in): aviso in-app al equipo antes de la próxima dosis.
+            void scheduleDoseReminderIfOn({
+              appliedId,
+              nextDoseDateISO: nextDoseDate,
+              petName: owner.name || null,
+              vaccineName: v.productName,
             });
 
             // Cobro: línea de la vacuna en la cuenta de esta consulta (mismo ticket).

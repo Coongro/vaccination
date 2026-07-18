@@ -127,6 +127,33 @@
               ]
             }
           ]
+        },
+        {
+          "id": "vaccination.general.reminders",
+          "page": "vaccination.general",
+          "label": "Recordatorios",
+          "order": 20,
+          "items": [
+            {
+              "key": "vaccination.doseReminder",
+              "type": "enum",
+              "label": "Recordatorio de refuerzo",
+              "description": "Avisar en la campana de Coongro cuando se acerca la fecha de la próxima dosis, para que la clínica contacte al tutor. El aviso llega al equipo (no al tutor). Default: sin recordatorio.",
+              "default": "off",
+              "options": [
+                { "value": "off", "label": "Sin recordatorio" },
+                { "value": "1", "label": "1 día antes" },
+                { "value": "3", "label": "3 días antes" },
+                { "value": "7", "label": "7 días antes" }
+              ],
+              "tags": [
+                "vaccination",
+                "dosereminder",
+                "recordatorio",
+                "refuerzo"
+              ]
+            }
+          ]
         }
       ]
     }

@@ -1,10 +1,10 @@
 
-> @coongro/vaccination@1.0.0 build A:\Coongro2\Coongro\plugins\vaccination
+> @coongro/vaccination@0.2.0 build A:\Coongro2\Coongro\plugins\vaccination
 > npm run build:css && npm run copy:fontawesome && tsc
 
 npm warn config ignoring workspace config at A:\Coongro2\Coongro\plugins\vaccination/.npmrc
 
-> @coongro/vaccination@1.0.0 build:css
+> @coongro/vaccination@0.2.0 build:css
 > tailwindcss -c tailwind.config.cjs -i ./src/styles/tailwind.css -o ./dist/assets/tailwind.css --minify
 
 Browserslist: caniuse-lite is outdated. Please run:
@@ -13,12 +13,9 @@ Browserslist: caniuse-lite is outdated. Please run:
 
 Rebuilding...
 
-Done in 681ms.
+Done in 754ms.
 npm warn config ignoring workspace config at A:\Coongro2\Coongro\plugins\vaccination/.npmrc
 
-> @coongro/vaccination@1.0.0 copy:fontawesome
+> @coongro/vaccination@0.2.0 copy:fontawesome
 > node scripts/copy-fontawesome.cjs
 
-src/views/catalogo/index.tsx(2,10): error TS2305: Module '"@coongro/patients"' has no exported member 'usePatientsSettings'.
- ELIFECYCLE  Command failed with exit code 2.
- WARN   Local package.json exists, but node_modules missing, did you mean to install?

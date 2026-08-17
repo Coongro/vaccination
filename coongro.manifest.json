@@ -57,17 +57,39 @@
       {
         "module": "./dist/repositories/vaccine-detail.repository.js",
         "export": "VaccineDetailRepository",
-        "prefix": "vaccination.catalog"
+        "prefix": "vaccination.catalog",
+        "actions": [
+          "list",
+          "getById",
+          "getByProductId",
+          "create",
+          "update",
+          "softDelete"
+        ]
       },
       {
         "module": "./dist/repositories/vaccine-component.repository.js",
         "export": "VaccineComponentRepository",
-        "prefix": "vaccination.components"
+        "prefix": "vaccination.components",
+        "actions": [
+          "list",
+          "listByDetail",
+          "create",
+          "delete"
+        ]
       },
       {
         "module": "./dist/repositories/applied-vaccination.repository.js",
         "export": "AppliedVaccinationRepository",
-        "prefix": "vaccination.applied"
+        "prefix": "vaccination.applied",
+        "actions": [
+          "list",
+          "getById",
+          "create",
+          "update",
+          "delete",
+          "softDelete"
+        ]
       }
     ],
     "viewContributions": [
